@@ -6,22 +6,25 @@ import { useState } from "react"
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react"
 import { Link } from "react-router-dom"
 import "../styles/auth.css"
+import axios from "axios"
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom"
 
 export default function Login() {
-  const [email, setEmail] = useState("")
+  const [userName, setUserName] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [errors, setErrors] = useState<{ userName?: string; password?: string; }>({})
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {}
+    const newErrors: { userName?: string; password?: string } = {}
 
-    if (!email) {
-      newErrors.email = "Email là bắt buộc"
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Email không hợp lệ"
+    if (!userName) {
+      newErrors.userName = "Tên người dùng là bắt buộc"
     }
 
     if (!password) {
@@ -34,18 +37,38 @@ export default function Login() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (validateForm()) {
       setIsLoading(true)
 
-      // Giả lập đăng nhập
-      setTimeout(() => {
-        setIsLoading(false)
-        // Chuyển hướng đến trang chính sau khi đăng nhập thành công
-        window.location.href = "/"
-      }, 1500)
+      try {
+        const params = new URLSearchParams();
+        params.append('username', userName);
+        params.append('password', password);
+        // FIXME
+        const response = await axios.post("http://localhost:8000/auth/login", 
+          params,
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        );
+
+        login(response.data.access_token); 
+        navigate("/message");
+      } catch (error: any) {
+        setIsLoading(false);
+        if (error.response && error.response.data) {
+          setErrors({
+            ...errors,
+            userName: error.response.data.detail || "Tài khoản hoặc mật khẩu không đúng"
+          });
+        } else {
+          setErrors({
+            ...errors,
+            userName: "Đăng nhập thất bại. Vui lòng thử lại."
+          });
+        }
+      }
     }
   }
 
@@ -57,38 +80,24 @@ export default function Login() {
           <p className="auth-subtitle">Chào mừng trở lại! Vui lòng đăng nhập để tiếp tục.</p>
         </div>
 
-        <div className="social-login">
-          <button className="social-button google">
-            <img src="/placeholder.svg?height=20&width=20" alt="Google" className="social-icon" />
-            <span>Đăng nhập với Google</span>
-          </button>
-          <button className="social-button facebook">
-            <img src="/placeholder.svg?height=20&width=20" alt="Facebook" className="social-icon" />
-            <span>Đăng nhập với Facebook</span>
-          </button>
-        </div>
-
-        <div className="auth-divider">
-          <span>hoặc đăng nhập với email</span>
-        </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Email
+            <label htmlFor="userName" className="form-label">
+              User Name
             </label>
-            <div className={`input-container ${errors.email ? "error" : ""}`}>
+            <div className={`input-container ${errors.userName ? "error" : ""}`}>
               <Mail size={18} className="input-icon" />
               <input
-                type="email"
-                id="email"
+                type="text"
+                id="userName"
                 className="form-input"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="JohnDoe"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
               />
             </div>
-            {errors.email && <p className="error-message">{errors.email}</p>}
+            {errors.userName && <p className="error-message">{errors.userName}</p>}
           </div>
 
           <div className="form-group">

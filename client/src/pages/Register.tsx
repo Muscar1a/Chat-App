@@ -1,40 +1,39 @@
+// DONE
 "use client"
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react"
-import { Link } from "react-router-dom"
-import "../styles/auth.css"
+import { useState } from "react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import "../styles/auth.css";
+import axios from "axios";
 
 export default function Register() {
-  const [fullName, setFullName] = useState("")
+  const [userName, setUserName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [agreeTerms, setAgreeTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{
-    fullName?: string
+    userName?: string
     email?: string
     password?: string
     confirmPassword?: string
-    terms?: string
   }>({})
 
   const validateForm = () => {
     const newErrors: {
-      fullName?: string
+      userName?: string
       email?: string
       password?: string
       confirmPassword?: string
-      terms?: string
     } = {}
 
-    if (!fullName.trim()) {
-      newErrors.fullName = "Họ tên là bắt buộc"
+    if (!userName.trim()) {
+      newErrors.userName = "Tên người dùng là bắt buộc"
     }
 
     if (!email) {
@@ -55,26 +54,38 @@ export default function Register() {
       newErrors.confirmPassword = "Mật khẩu xác nhận không khớp"
     }
 
-    if (!agreeTerms) {
-      newErrors.terms = "Bạn phải đồng ý với điều khoản dịch vụ"
-    }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (validateForm()) {
       setIsLoading(true)
 
-      // Giả lập đăng ký
-      setTimeout(() => {
+      try {
+        await axios.post("http://localhost:8000/users/register", {
+          username: userName,
+          email,
+          password,
+        })
         setIsLoading(false)
-        // Chuyển hướng đến trang đăng nhập sau khi đăng ký thành công
         window.location.href = "/login"
-      }, 1500)
+      } catch (error: any) {
+        setIsLoading(false)
+        if (error.response && error.response.data && error.response.data.message) {
+          setErrors((prev) => ({
+            ...prev,
+            email: error.response.data.message,
+          }))
+        } else {
+          setErrors((prev) => ({
+            ...prev,
+            email: "Đăng ký không thành công. Vui lòng thử lại.",
+          }));
+        }
+      }
     }
   }
 
@@ -86,38 +97,23 @@ export default function Register() {
           <p className="auth-subtitle">Tạo tài khoản để bắt đầu trò chuyện với bạn bè.</p>
         </div>
 
-        <div className="social-login">
-          <button className="social-button google">
-            <img src="/placeholder.svg?height=20&width=20" alt="Google" className="social-icon" />
-            <span>Đăng ký với Google</span>
-          </button>
-          <button className="social-button facebook">
-            <img src="/placeholder.svg?height=20&width=20" alt="Facebook" className="social-icon" />
-            <span>Đăng ký với Facebook</span>
-          </button>
-        </div>
-
-        <div className="auth-divider">
-          <span>hoặc đăng ký với email</span>
-        </div>
-
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="fullName" className="form-label">
-              Họ và tên
+            <label htmlFor="userName" className="form-label">
+              Tên tài khoản
             </label>
-            <div className={`input-container ${errors.fullName ? "error" : ""}`}>
+            <div className={`input-container ${errors.userName ? "error" : ""}`}>
               <User size={18} className="input-icon" />
               <input
                 type="text"
-                id="fullName"
+                id="userName"
                 className="form-input"
-                placeholder="Nguyễn Văn A"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                placeholder="JohnSmith"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
               />
             </div>
-            {errors.fullName && <p className="error-message">{errors.fullName}</p>}
+            {errors.userName && <p className="error-message">{errors.userName}</p>}
           </div>
 
           <div className="form-group">
@@ -190,23 +186,6 @@ export default function Register() {
             {errors.confirmPassword && <p className="error-message">{errors.confirmPassword}</p>}
           </div>
 
-          <div className="terms-container">
-            <label className="checkbox-container">
-              <input type="checkbox" checked={agreeTerms} onChange={() => setAgreeTerms(!agreeTerms)} />
-              <span className="checkmark"></span>
-              <span>
-                Tôi đồng ý với{" "}
-                <Link to="/terms" className="terms-link">
-                  Điều khoản dịch vụ
-                </Link>{" "}
-                và{" "}
-                <Link to="/privacy" className="terms-link">
-                  Chính sách bảo mật
-                </Link>
-              </span>
-            </label>
-            {errors.terms && <p className="error-message">{errors.terms}</p>}
-          </div>
 
           <button type="submit" className="auth-button" disabled={isLoading}>
             {isLoading ? (
