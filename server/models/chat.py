@@ -14,9 +14,9 @@ class MessageRecipientModel(BaseModel):
 class MessageModel(BaseModel):
     id: str = Field(default_factory=get_uuid4)
     message: str = Field(...)
-    encrypted_key_sender: str = Field(...)
-    encrypted_key_receiver: str = Field(...)
-    iv: str = Field(...)
+    # encrypted_key_sender: str = Field(...)
+    # encrypted_key_receiver: str = Field(...)
+    # iv: str = Field(...)
     created_by: str = Field(...)
     created_at: datetime = Field(default_factory=datetime_now)
 

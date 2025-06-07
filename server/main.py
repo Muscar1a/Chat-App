@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIWebSocketRoute
 
 from api.routers import users, auth, chat
-# from websocket.wsocket import chat_websocket_endpoint
+from wsocket import chat_websocket_endpoint
 from database import db_connection_status, startup_db_client, shutdown_db_client
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
@@ -45,10 +45,10 @@ app.add_middleware(
 # #   API ROUTERS
 app.include_router(auth.router)
 app.include_router(users.router)
-# app.include_router(chat.router)
+app.include_router(chat.router)
 
 
 
-# websocket = APIWebSocketRoute("/ws/chat/{chat_type}/{chat_id}", chat_websocket_endpoint)
+websocket = APIWebSocketRoute("/ws/chat/{chat_type}/{chat_id}", chat_websocket_endpoint)
 
-# app.router.routes.append(websocket)
+app.router.routes.append(websocket)

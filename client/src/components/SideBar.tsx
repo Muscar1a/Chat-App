@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, MoreVertical } from "lucide-react"
+import { Search, Plus } from "lucide-react"
 import ChatItem from "./ChatItem"
 import UserProfile from "./UserProfile"
+import UserListModal from "./UserListModal"
 
 interface SidebarProps {
   selectedChat: string | null
@@ -12,39 +13,11 @@ interface SidebarProps {
 
 const mockChats = [
   {
-    id: "1",
-    name: "Alice Johnson",
-    lastMessage: "Hey! How are you doing?",
+    id: "ai-assistant",
+    name: "AI Assistant",
+    lastMessage: "How can I help you today?",
     timestamp: "2 min ago",
-    unreadCount: 2,
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-  },
-  {
-    id: "2",
-    name: "Bob Smith",
-    lastMessage: "Thanks for the help yesterday!",
-    timestamp: "1 hour ago",
     unreadCount: 0,
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: false,
-  },
-  {
-    id: "3",
-    name: "Team Project",
-    lastMessage: "Meeting at 3 PM tomorrow",
-    timestamp: "3 hours ago",
-    unreadCount: 5,
-    avatar: "/placeholder.svg?height=40&width=40",
-    isOnline: true,
-    isGroup: true,
-  },
-  {
-    id: "4",
-    name: "Sarah Wilson",
-    lastMessage: "Can you review this document?",
-    timestamp: "Yesterday",
-    unreadCount: 1,
     avatar: "/placeholder.svg?height=40&width=40",
     isOnline: true,
   },
@@ -52,8 +25,35 @@ const mockChats = [
 
 export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [isUserListOpen, setIsUserListOpen] = useState(false)
+  const [chats, setChats] = useState(mockChats)
 
-  const filteredChats = mockChats.filter((chat) => chat.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredChats = chats.filter((chat) => chat.name.toLowerCase().includes(searchQuery.toLowerCase()))
+
+  const handleCreateNewChat = (userId: string, userName: string, userAvatar: string) => {
+    // Check if chat already exists
+    const existingChat = chats.find((chat) => chat.id === userId)
+    if (existingChat) {
+      onSelectChat(existingChat.id)
+    } else {
+      // Create new chat
+      const newChat = {
+        id: userId,
+        name: userName,
+        lastMessage: "Start a new conversation",
+        timestamp: "Just now",
+        unreadCount: 0,
+        avatar: userAvatar,
+        isOnline: true,
+      }
+
+      const updatedChats = [newChat, ...chats]
+      setChats(updatedChats)
+      onSelectChat(userId)
+    }
+
+    setIsUserListOpen(false)
+  }
 
   return (
     <div className="sidebar">
@@ -67,7 +67,7 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder="Search contacts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
@@ -85,6 +85,16 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
           />
         ))}
       </div>
+
+      <button className="new-chat-button" onClick={() => setIsUserListOpen(true)}>
+        <Plus size={24} />
+      </button>
+
+      <UserListModal
+        isOpen={isUserListOpen}
+        onClose={() => setIsUserListOpen(false)}
+        onSelectUser={handleCreateNewChat}
+      />
     </div>
   )
 }

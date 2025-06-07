@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from api.deps import get_private_chat_manager, get_token_manager
 from serializers.chat_serializers import message_serializer
 from crud.chat import PrivateChatManager
-from services.token import TokenManager
+from service.token import TokenManager
 from schemas import shared
 import schemas
 import time
@@ -72,9 +72,9 @@ async def chat_websocket_endpoint(
                 new_message = await pvt_chat_manager.create_message(
                     current_user.id, chat_id, 
                     data['message'], 
-                    data['encrypted_key_sender'],
-                    data['encrypted_key_receiver'],
-                    data['iv'],
+                    # data['encrypted_key_sender'],
+                    # data['encrypted_key_receiver'],
+                    # data['iv'],
                 )
 
             serialized_message = message_serializer(new_message.model_dump())

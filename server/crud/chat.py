@@ -49,9 +49,9 @@ class BaseChatManager:
         current_user_id: str,
         chat_id: str,
         message: str,
-        encrypted_key_sender: str,
-        encrypted_key_receiver: str,
-        iv: str
+        # encrypted_key_sender: str,
+        # encrypted_key_receiver: str,
+        # iv: str
     ) -> schemas.Message:
 
         chat = await self.get_chat_by_id(chat_id)
@@ -64,9 +64,9 @@ class BaseChatManager:
 
         new_message = MessageModel(
             created_by=current_user_id, message=message,
-            encrypted_key_sender=encrypted_key_sender,
-            encrypted_key_receiver=encrypted_key_receiver,
-            iv=iv
+            # encrypted_key_sender=encrypted_key_sender,
+            # encrypted_key_receiver=encrypted_key_receiver,
+            # iv=iv
         )
         print('\n - new_message full', new_message.model_dump())
         print('\n - new_message message only', new_message.model_dump()['message'])
