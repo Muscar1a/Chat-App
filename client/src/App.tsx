@@ -12,6 +12,7 @@ import { ChatProvider } from "./context/ChatContext"
 import "./App.css"
 import "./styles/toast.css"
 import { AuthProvider, useAuth } from "./context/AuthContext"
+import HomePage from "./pages/HomePage"
 
 function ChatApp() {
   const [selectedChat, setSelectedChat] = useState<string | null>("1")
@@ -33,11 +34,26 @@ function App() {
     <Router>
       <AuthProvider> {/* Wrap your entire app with AuthProvider */}
         <Routes>
-          <Route path="/message" element={<RequireAuth><ChatApp /></RequireAuth>} />
+          <Route path="/" element={<HomePage />} />
+          <Route
+            path="/message"
+            element={
+              <RequireAuth>
+                <ChatApp />
+              </RequireAuth>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <Profile />
+              </RequireAuth>
+            }
+          />
         </Routes>
       </AuthProvider>
     </Router>
@@ -47,9 +63,9 @@ function App() {
 // Helper component to protect routes
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { isAuthenticated, loading } = useAuth();
-  
+
   if (loading) return <div className="loading">Loading...</div>;
-  
+
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
 

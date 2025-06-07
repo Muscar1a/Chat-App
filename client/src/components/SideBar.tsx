@@ -58,15 +58,8 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
+        <h1 className="app-title">Messages</h1>
         <UserProfile />
-        <div className="header-actions">
-          <button className="icon-button">
-            <Plus size={20} />
-          </button>
-          <button className="icon-button">
-            <MoreVertical size={20} />
-          </button>
-        </div>
       </div>
 
       <div className="search-container">

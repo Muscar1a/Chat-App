@@ -1,5 +1,5 @@
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr, field_validator
 import re
@@ -7,7 +7,6 @@ from jose import JWTError
 from datetime import datetime
 import datetime
 from datetime import datetime, timezone, timedelta
-
 
 from api.deps import get_token_manager, get_user_manager, get_current_active_user
 from service.token import TokenManager
@@ -161,5 +160,4 @@ async def logout(
     await user_manager.update_user(updated_data)
     
     return {"msg": "Logged out and revoked prior tokens"}
-
 

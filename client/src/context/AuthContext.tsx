@@ -16,33 +16,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Kiểm tra token khi component mount
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
-
       if (!token) {
         setLoading(false);
         return;
       }
-
       try {
-        // Thiết lập token cho tất cả requests
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-        // Kiểm tra token hợp lệ bằng cách gọi API
         const response = await axios.get('http://localhost:8000/users/me');
         setUser(response.data);
         setIsAuthenticated(true);
       } catch (error) {
-        // Token không hợp lệ hoặc hết hạn
         localStorage.removeItem('token');
         delete axios.defaults.headers.common['Authorization'];
       } finally {
         setLoading(false);
       }
     };
-
     checkAuth();
   }, []);
 
