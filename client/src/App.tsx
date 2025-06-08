@@ -15,7 +15,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext"
 import HomePage from "./pages/HomePage"
 
 function ChatApp() {
-  const [selectedChat, setSelectedChat] = useState<string | null>("1")
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
 
   return (
     <ChatProvider>

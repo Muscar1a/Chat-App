@@ -13,9 +13,9 @@ class Message(MessageBase):
     id: str
     created_by: str
     created_at: datetime  
-    encrypted_key_sender: str
-    encrypted_key_receiver: str
-    iv: str
+    # encrypted_key_sender: str
+    # encrypted_key_receiver: str
+    # iv: str
 
 class MessageResponse(Message):
     created_at: str

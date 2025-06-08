@@ -9,7 +9,7 @@ import "../styles/user-profile.css"; // Hãy tạo file CSS này
 export default function UserProfile() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const { logout, user } = useAuth()
+  const { logout, user, loading } = useAuth()
   const navigate = useNavigate()
 
   const toggleDropdown = () => {
@@ -39,14 +39,30 @@ export default function UserProfile() {
     }
   }, [])
 
+  if (loading || !user) {
+    return (
+      <div className="user-profile-container">
+        <div className="user-profile loading">
+          <div className="user-avatar-container">
+            <div className="user-avatar skeleton"></div>
+          </div>
+          <div className="user-info">
+            <div className="user-name skeleton"></div>
+            <div className="user-status skeleton"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="user-profile-container" ref={dropdownRef}>
       <div className="user-profile" onClick={toggleDropdown}>
         <div className="user-avatar-container">
-          <img 
-            src={user?.avatar || "/placeholder.svg?height=40&width=40"} 
-            alt="Your profile" 
-            className="user-avatar" 
+          <img
+            src={user?.avatar || "/placeholder.svg?height=40&width=40"}
+            alt="Your profile"
+            className="user-avatar"
           />
         </div>
         <div className="user-info">
@@ -73,14 +89,14 @@ export default function UserProfile() {
         <div className="user-dropdown">
           <div className="dropdown-header">
             <div className="dropdown-user-avatar">
-              <img 
-                src={user?.avatar || "/placeholder.svg?height=40&width=40"} 
-                alt={user?.username || "John Doe"} 
+              <img
+                src={user?.avatar || "/placeholder.svg?height=40&width=40"}
+                alt={user?.username || "Loading ..."}
               />
             </div>
             <div className="dropdown-user-info">
-              <p className="dropdown-user-name">{user?.username || "John Doe"}</p>
-              <p className="dropdown-user-email">{user?.email || "john.doe@example.com"}</p>
+              <p className="dropdown-user-name">{user?.username || "Loading ..."}</p>
+              <p className="dropdown-user-email">{user?.email || "Loading ..."}</p>
             </div>
           </div>
 

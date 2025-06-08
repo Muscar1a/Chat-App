@@ -1,84 +1,84 @@
 "use client"
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef, useEffect } from "react"
-import { Send, Paperclip, Smile } from "lucide-react"
-import MessageBubble from "./MessageBubble"
-import ChatHeader from "./ChatHeader"
+import { useState, useRef, useEffect } from "react";
+import { Send, Paperclip, Smile } from "lucide-react";
+import MessageBubble from "./MessageBubble";
+import ChatHeader from "./ChatHeader";
+import { useAuth } from "../context/AuthContext";
+import { useWebSocket } from "../hooks/useWebSocket";
+
+interface Message {
+  id: string
+  message: string
+  created_at: string
+  created_by: string
+};
 
 interface ChatWindowProps {
   chatId: string | null
-}
+};
 
-const mockMessages = [
-  {
-    id: "1",
-    text: "Hey! How are you doing?",
-    sender: "Alice Johnson",
-    timestamp: "10:30 AM",
-    isOwn: false,
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: "2",
-    text: "I'm doing great! Just finished a big project at work. How about you?",
-    sender: "You",
-    timestamp: "10:32 AM",
-    isOwn: true,
-  },
-  {
-    id: "3",
-    text: "That's awesome! I'd love to hear more about it. Are you free for a call later?",
-    sender: "Alice Johnson",
-    timestamp: "10:35 AM",
-    isOwn: false,
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: "4",
-    text: "How about 3 PM?",
-    sender: "You",
-    timestamp: "10:36 AM",
-    isOwn: true,
-  },
-  {
-    id: "5",
-    text: "Perfect! I'll call you then 📞",
-    sender: "Alice Johnson",
-    timestamp: "10:37 AM",
-    isOwn: false,
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-]
 
 export default function ChatWindow({ chatId }: ChatWindowProps) {
-  const [message, setMessage] = useState("")
-  const [messages, setMessages] = useState(mockMessages)
+  const [messageText, setMessageText] = useState("")
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuth()
+  const token = localStorage.getItem('token')
+
+  const handleMessageReceived = (newMessage: Message) => {
+    setMessages((prev) => [...prev, newMessage]);
+  };
+
+  const handleOldMessagesLoaded = (oldMessages: Message[]) => {
+    setMessages(oldMessages);
+  };
+  
+  const { isConnected, connectionError, sendMessage } = useWebSocket({
+    chatId,
+    token,
+    onMessageReceived: handleMessageReceived,
+    onOldMessagesLoaded: handleOldMessagesLoaded
+  })
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (message.trim()) {
-      const newMessage = {
-        id: Date.now().toString(),
-        text: message,
-        sender: "You",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        isOwn: true,
-      }
-      setMessages([...messages, newMessage])
-      setMessage("")
+  useEffect(() => {
+    if (chatId) {
+      setMessages([]);
     }
-  }
+  }, [chatId]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageText.trim() || !isConnected) return;
+
+    setIsLoading(true);
+    try {
+      sendMessage(messageText);
+      setMessageText("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage(e)
+    }
+  };
 
   if (!chatId) {
     return (
@@ -89,16 +89,30 @@ export default function ChatWindow({ chatId }: ChatWindowProps) {
         </div>
       </div>
     )
-  }
+  };
 
   return (
     <div className="chat-window">
-      <ChatHeader name="Alice Johnson" status="Online" avatar="/placeholder.svg?height=40&width=40" />
-
+      <ChatHeader
+        name="Chat User"
+        status={isConnected ? "Online" : connectionError || "Connecting..."}
+        avatar="/placeholder.svg?height=40&width=40"
+      />
       <div className="messages-container">
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
+        {messages.map((msg) => {
+          // Convert API message format to component expected format
+          const messageForComponent = {
+            id: msg.id,
+            text: msg.message,
+            sender: msg.created_by === user?.id ? "You" : "Other",
+            timestamp: new Date(msg.created_at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit"
+            }),
+            isOwn: msg.created_by === user?.id,
+          }
+          return <MessageBubble key={msg.id} message={messageForComponent} />
+        })}
         <div ref={messagesEndRef} />
       </div>
 
@@ -109,15 +123,21 @@ export default function ChatWindow({ chatId }: ChatWindowProps) {
           </button>
           <input
             type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            onKeyPress={handleKeyPress}
             placeholder="Type a message..."
             className="message-input"
+            disabled={!isConnected || isLoading}
           />
           <button type="button" className="emoji-button">
             <Smile size={20} />
           </button>
-          <button type="submit" className="send-button" disabled={!message.trim()}>
+          <button
+            type="submit"
+            className="send-button"
+            disabled={!messageText.trim() || !isConnected || isLoading}
+          >
             <Send size={20} />
           </button>
         </div>
