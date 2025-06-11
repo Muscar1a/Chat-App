@@ -606,6 +606,33 @@ input:checked + .toggle-slider:before {
   background: #b91c1c;
 }
 
+/* Theme Settings Container */
+.theme-settings-container {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-primary);
+  overflow: hidden;
+}
+
+.theme-settings-container h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+  padding: var(--spacing-xl) var(--spacing-xl) 0;
+}
+
+.theme-settings-container > p {
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-lg) 0;
+  padding: 0 var(--spacing-xl);
+  font-size: var(--font-size-base);
+}
+
+.theme-settings-container .theme-settings {
+  padding: 0 var(--spacing-xl) var(--spacing-xl);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .profile-content {

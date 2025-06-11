@@ -1,13 +1,15 @@
 "use client"
 
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Palette, Settings } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import "../styles/user-profile.css"; // Hãy tạo file CSS này
+import ThemeSettings from "./ThemeSettings";
+import "../styles/user-profile.css";
 
 export default function UserProfile() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isThemeSettingsOpen, setIsThemeSettingsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { logout, user, loading } = useAuth()
   const navigate = useNavigate()
@@ -24,6 +26,11 @@ export default function UserProfile() {
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error)
     }
+  }
+
+  const handleThemeSettings = () => {
+    setIsThemeSettingsOpen(true)
+    setIsDropdownOpen(false)
   }
 
   useEffect(() => {
@@ -109,6 +116,10 @@ export default function UserProfile() {
               <Settings size={18} />
               <span>Preferences</span>
             </button>
+            <button className="dropdown-item" onClick={handleThemeSettings}>
+              <Palette size={18} />
+              <span>Theme Settings</span>
+            </button>
             <button className="dropdown-item sign-out" onClick={handleLogout}>
               <LogOut size={18} />
               <span>Sign Out</span>
@@ -116,6 +127,7 @@ export default function UserProfile() {
           </div>
         </div>
       )}
+      <ThemeSettings isOpen={isThemeSettingsOpen} onClose={() => setIsThemeSettingsOpen(false)} />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { Link } from "react-router-dom"
 import ProfileForm from "../components/ProfileForm"
 import PasswordChange from "../components/PasswordChange"
 import AccountSettings from "../components/AccountSettings"
+import ThemeSettings from "../components/ThemeSettings"
 import { useToast } from "../components/Toast"
 import "../styles/profile.css"
 
@@ -18,6 +19,7 @@ export default function Profile() {
     { id: "profile", label: "Thông tin cá nhân", icon: "👤" },
     { id: "password", label: "Đổi mật khẩu", icon: "🔒" },
     { id: "settings", label: "Cài đặt tài khoản", icon: "⚙️" },
+    { id: "theme", label: "Giao diện", icon: "🎨" },
   ]
 
   return (
@@ -50,6 +52,13 @@ export default function Profile() {
           {activeTab === "profile" && <ProfileForm onUnsavedChanges={setHasUnsavedChanges} />}
           {activeTab === "password" && <PasswordChange onUnsavedChanges={setHasUnsavedChanges} />}
           {activeTab === "settings" && <AccountSettings onUnsavedChanges={setHasUnsavedChanges} />}
+          {activeTab === "theme" && (
+            <div className="theme-settings-container">
+              <h2>Cài đặt giao diện</h2>
+              <p>Tùy chỉnh giao diện ứng dụng theo sở thích của bạn</p>
+              <ThemeSettings isOpen={true} onClose={() => {}} isInline={true} />
+            </div>
+          )}
         </div>
       </div>
 
