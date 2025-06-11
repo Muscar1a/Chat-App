@@ -131,13 +131,13 @@ export default function Login() {
             {errors.password && <p className="error-message">{errors.password}</p>}
           </div>
 
-          <div className="remember-me">
+          {/*<div className="remember-me">
             <label className="checkbox-container">
               <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
               <span className="checkmark"></span>
               <span>Ghi nhớ đăng nhập</span>
             </label>
-          </div>
+          </div> */}
 
           <button type="submit" className="auth-button" disabled={isLoading}>
             {isLoading ? (

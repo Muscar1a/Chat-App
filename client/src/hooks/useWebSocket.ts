@@ -32,8 +32,13 @@ export const useWebSocket = ({ chatId, token, onMessageReceived, onOldMessagesLo
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      const processedMessages = response.data.map((msg: Message) => ({
+        ...msg,
+        created_at: new Date(msg.created_at).toISOString() // Ensure consistent format
+      }));
+
       // Sort messages by creation time
-      const sortedMessages = response.data.sort((a: Message, b: Message) =>
+      const sortedMessages = processedMessages.sort((a: Message, b: Message) =>
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       );
 

@@ -20,7 +20,7 @@ from core.security import (
 )
 from .auth_utils import create_password_reset_token
 from core.email import send_reset_email
-from schemas import UserUpdate
+from schemas import UserUpdate, UserUpdateToken
 
 router = APIRouter(
     prefix="/auth",
@@ -150,7 +150,7 @@ async def logout(
     user = await user_manager.get_by_id(current_user.id)
     
     # Tạo đối tượng UserUpdate với token_version tăng lên
-    updated_data = UserUpdate(
+    updated_data = UserUpdateToken(
         id=current_user.id,
         token_version=user.get('token_version', 0) + 1
     )

@@ -23,7 +23,7 @@ export default function Profile() {
   return (
     <div className="profile-container">
       <div className="profile-header">
-        <Link to="/" className="back-button">
+        <Link to="/message" className="back-button">
           <ArrowLeft size={20} />
           <span>Quay lại chat</span>
         </Link>

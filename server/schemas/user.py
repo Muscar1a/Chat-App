@@ -27,25 +27,6 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     # password2: str
-    """
-    @field_validator("password")
-    def password_complexity(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        # must include letters
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Password must include at least one lowercase letter")
-        # at least one special character
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
-            raise ValueError("Password must include at least one special character")
-        # at least one uppercase letter
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Password must include at least one uppercase letter")
-        # at least one digit
-        if not re.search(r"\d", v):
-            raise ValueError("Password must include at least one digit")
-        return v
-    """
     
 class UserRead(UserBase):
     id: ObjectIdStr
@@ -59,6 +40,11 @@ class UserRead(UserBase):
 User = UserRead
 
 class UserUpdate(BaseModel):
+    id: str
+    password: Optional[str] = None
+    # token_version: Optional[int] = None
+
+class UserUpdateToken(BaseModel):
     id: str
     # password: Optional[str] = None
     token_version: Optional[int] = None

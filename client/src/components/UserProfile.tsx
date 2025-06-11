@@ -60,7 +60,7 @@ export default function UserProfile() {
       <div className="user-profile" onClick={toggleDropdown}>
         <div className="user-avatar-container">
           <img
-            src={user?.avatar || "/placeholder.svg?height=40&width=40"}
+            src={user?.avatar || "/original_user_image.jpg?height=40&width=40"}
             alt="Your profile"
             className="user-avatar"
           />
@@ -90,7 +90,7 @@ export default function UserProfile() {
           <div className="dropdown-header">
             <div className="dropdown-user-avatar">
               <img
-                src={user?.avatar || "/placeholder.svg?height=40&width=40"}
+                src={user?.avatar || "/original_user_image.jpg?height=40&width=40"}
                 alt={user?.username || "Loading ..."}
               />
             </div>

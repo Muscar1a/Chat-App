@@ -29,6 +29,14 @@ export default function ChatWindow({ chatId }: ChatWindowProps) {
   const { user } = useAuth()
   const token = localStorage.getItem('token')
 
+  const formatTimestamp = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const handleMessageReceived = (newMessage: Message) => {
     setMessages((prev) => [...prev, newMessage]);
   };
@@ -36,7 +44,7 @@ export default function ChatWindow({ chatId }: ChatWindowProps) {
   const handleOldMessagesLoaded = (oldMessages: Message[]) => {
     setMessages(oldMessages);
   };
-  
+
   const { isConnected, connectionError, sendMessage } = useWebSocket({
     chatId,
     token,
@@ -94,9 +102,15 @@ export default function ChatWindow({ chatId }: ChatWindowProps) {
   return (
     <div className="chat-window">
       <ChatHeader
-        name="Chat User"
+        name={
+          user
+            ? user.first_name && user.last_name
+              ? `${user.first_name} ${user.last_name}`
+              : user.first_name || user.last_name || user.username
+            : ""
+        }
         status={isConnected ? "Online" : connectionError || "Connecting..."}
-        avatar="/placeholder.svg?height=40&width=40"
+        avatar="/original_user_image.jpg?height=40&width=40"
       />
       <div className="messages-container">
         {messages.map((msg) => {
@@ -105,10 +119,7 @@ export default function ChatWindow({ chatId }: ChatWindowProps) {
             id: msg.id,
             text: msg.message,
             sender: msg.created_by === user?.id ? "You" : "Other",
-            timestamp: new Date(msg.created_at).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit"
-            }),
+            timestamp: formatTimestamp(msg.created_at),
             isOwn: msg.created_by === user?.id,
           }
           return <MessageBubble key={msg.id} message={messageForComponent} />

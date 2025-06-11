@@ -47,7 +47,7 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
                 ? new Date(chat.messages[chat.messages.length - 1].created_at).toLocaleTimeString()
                 : "Just now",
               unreadCount: 0,
-              avatar: chatInfo.recipient_profile?.avatar || "/placeholder.svg?height=40&width=40",
+              avatar: chatInfo.recipient_profile?.avatar || "/original_user_image.jpg?height=40&width=40",
               isOnline: chatInfo.recipient_profile?.is_online || false,
             }
           } catch (error) {
@@ -58,7 +58,7 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
               lastMessage: "No messages yet",
               timestamp: "Just now",
               unreadCount: 0,
-              avatar: "/placeholder.svg?height=40&width=40",
+              avatar: "/original_user_image.jpg?height=40&width=40",
               isOnline: false,
             }
           }

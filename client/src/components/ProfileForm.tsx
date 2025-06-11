@@ -16,7 +16,8 @@ export default function ProfileForm({ onUnsavedChanges }: ProfileFormProps) {
   const { addToast } = useToast()
 
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     bio: "",
     location: "",
@@ -33,7 +34,8 @@ export default function ProfileForm({ onUnsavedChanges }: ProfileFormProps) {
   useEffect(() => {
     if (profile) {
       const data = {
-        fullName: profile.fullName || "",
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
         phone: profile.phone || "",
         bio: profile.bio || "",
         location: profile.location || "",
@@ -108,12 +110,16 @@ export default function ProfileForm({ onUnsavedChanges }: ProfileFormProps) {
       setIsLoading(false)
     }
   }
-
+  /*
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Họ tên là bắt buộc"
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "Họ tên là bắt buộc"
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Họ tên là bắt buộc"
     }
 
     if (formData.phone && !/^[+]?[0-9\s\-()]+$/.test(formData.phone)) {
@@ -127,11 +133,12 @@ export default function ProfileForm({ onUnsavedChanges }: ProfileFormProps) {
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
-
+  */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm()) return
+    // if (!validateForm()) return
+
 
     setIsLoading(true)
 
@@ -186,7 +193,7 @@ export default function ProfileForm({ onUnsavedChanges }: ProfileFormProps) {
         <div className="avatar-section">
           <div className="avatar-container">
             <img
-              src={profile?.avatar || "/placeholder.svg?height=120&width=120"}
+              src={profile?.avatar || "/original_user_image.jpg?height=80&width=80"}
               alt="Avatar"
               className="avatar-image"
             />
@@ -220,30 +227,31 @@ export default function ProfileForm({ onUnsavedChanges }: ProfileFormProps) {
             <div className="form-group">
               <label className="form-label">
                 <User size={16} />
-                Họ và tên *
+                Tên
               </label>
               <input
                 type="text"
-                className={`form-input ${errors.fullName ? "error" : ""}`}
-                value={formData.fullName}
-                onChange={(e) => handleInputChange("fullName", e.target.value)}
+                className={`form-input ${errors.firstName ? "error" : ""}`}
+                value={formData.firstName}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
                 placeholder="Nhập họ và tên"
               />
-              {errors.fullName && <span className="error-message">{errors.fullName}</span>}
+              {errors.firstName && <span className="error-message">{errors.firstName}</span>}
             </div>
 
             <div className="form-group">
               <label className="form-label">
-                <Mail size={16} />
-                Email
+                <User size={16} />
+                Họ
               </label>
               <input
-                type="email"
-                className="form-input"
-                value={profile?.email || ""}
-                disabled
-                title="Email không thể thay đổi"
+                type="text"
+                className={`form-input ${errors.lastName ? "error" : ""}`}
+                value={formData.lastName}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                placeholder="Nhập họ và tên"
               />
+              {errors.lastName && <span className="error-message">{errors.lastName}</span>}
             </div>
           </div>
 

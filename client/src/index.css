@@ -12,11 +12,14 @@ body {
   background: #f0f2f5;
 }
 
-#root {
-  height: 100vh;
+html {
+  scroll-behavior: smooth;
 }
 
-/* Scrollbar Styles */
+#root {
+  min-height: 100vh;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -32,24 +35,4 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body, html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  overflow: hidden;
-}
-
-#root {
-  height: 100vh;
-  width: 100vw;
 }

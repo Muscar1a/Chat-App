@@ -122,17 +122,18 @@
 }
 
 .input-container {
-  position: relative;
   display: flex;
   align-items: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  padding: 0 4px; /* Thêm padding để tạo khoảng cách */
 }
 
 .input-container:focus-within {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .input-container.error {
@@ -141,12 +142,14 @@
 
 .input-icon {
   color: #9ca3af;
-  margin-left: 12px;
+  margin-left: 8px;
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
 .form-input {
   width: 100%;
-  padding: 12px;
+  padding: 12px 8px;
   border: none;
   outline: none;
   font-size: 16px;
@@ -159,6 +162,8 @@
   color: #9ca3af;
   cursor: pointer;
   padding: 0 12px;
+  margin-left: 8px;
+  flex-shrink: 0;
 }
 
 .password-label-container {

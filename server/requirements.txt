@@ -12,3 +12,4 @@ python-socketio>=5.9.0
 pymongo
 itsdangerous
 slowapi
+pytz

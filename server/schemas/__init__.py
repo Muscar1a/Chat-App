@@ -1,4 +1,4 @@
-from .user import User, UserCreate, UserUpdate, UserInDb, UserOfAll
+from .user import User, UserCreate, UserUpdate, UserInDb, UserOfAll, UserUpdateToken
 from .token import Token, Login, TokenPayload
 from .chat import (
     MessageCreate,

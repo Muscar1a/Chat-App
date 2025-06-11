@@ -25,7 +25,7 @@ export default function ChatHeader({ name, status, avatar, statusColor = "#10b98
         </div>
       </div>
 
-      <div className="chat-header-actions">
+      {/* <div className="chat-header-actions">
         <button className="header-action-button">
           <Phone size={20} />
         </button>
@@ -35,7 +35,7 @@ export default function ChatHeader({ name, status, avatar, statusColor = "#10b98
         <button className="header-action-button">
           <MoreVertical size={20} />
         </button>
-      </div>
+      </div> */}
     </div>
   )
 }
