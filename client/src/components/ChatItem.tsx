@@ -1,15 +1,6 @@
 "use client"
+import { Chat } from "../types/chat";
 
-interface Chat {
-  id: string
-  name: string
-  lastMessage: string
-  timestamp: string
-  unreadCount: number
-  avatar: string
-  isOnline: boolean
-  isGroup?: boolean
-}
 
 interface ChatItemProps {
   chat: Chat
@@ -21,7 +12,7 @@ export default function ChatItem({ chat, isSelected, onClick }: ChatItemProps) {
   return (
     <div className={`chat-item ${isSelected ? "selected" : ""}`} onClick={onClick}>
       <div className="chat-item-avatar-container">
-        <img src={chat.avatar || "/placeholder.svg"} alt={chat.name} className="chat-item-avatar" />
+        <img src={chat.avatar || "/original_user_image.jpg"} alt={chat.name} className="chat-item-avatar" />
         {chat.isOnline && <div className="online-indicator" />}
       </div>
 

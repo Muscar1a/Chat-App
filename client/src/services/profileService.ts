@@ -1,21 +1,47 @@
-import { apiFetch, ApiError } from "./api"
+import axios from "axios"
+
+// Create an error class for API errors
+export class ApiError extends Error {
+  constructor(message: string, public status: number) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+  return {
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+}
 
 export interface UserProfile {
   id: string
   avatar?: string
-  fullName: string
+  first_name: string
+  last_name: string
+  username: string
   email: string
+  is_active: boolean
+  is_online: boolean
+  is_disabled: boolean
+  roles: string[]
+  token_version: number
   phone?: string
   bio?: string
   location?: string
   birthday?: string
   website?: string
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface UpdateProfileData {
-  fullName: string
+  first_name: string
+  last_name: string
+  email?: string
   phone?: string
   bio?: string
   location?: string
@@ -49,104 +75,137 @@ export interface UserSettings {
 }
 
 class ProfileService {
+  private baseURL = 'http://localhost:8000'
+
   // Get user profile
   async getProfile(): Promise<UserProfile> {
-    const response = await apiFetch<UserProfile>("/api/profile")
-    if (!response.success || !response.data) {
-      throw new ApiError("Failed to fetch profile", 500)
+    try {
+      const response = await axios.get(`${this.baseURL}/users/me`, {
+        headers: getAuthHeaders()
+      })
+      return response.data
+    } catch (error: any) {
+      throw new ApiError(
+        error.response?.data?.detail || "Failed to fetch profile", 
+        error.response?.status || 500
+      )
     }
-    return response.data
   }
 
   // Update user profile
   async updateProfile(data: UpdateProfileData): Promise<UserProfile> {
-    const response = await apiFetch<UserProfile>("/api/profile", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    })
-    if (!response.success || !response.data) {
-      throw new ApiError("Failed to update profile", 500)
+    try {
+      const response = await axios.put(`${this.baseURL}/users/me`, data, {
+        headers: getAuthHeaders()
+      })
+      return response.data
+    } catch (error: any) {
+      throw new ApiError(
+        error.response?.data?.detail || "Failed to update profile", 
+        error.response?.status || 500
+      )
     }
-    return response.data
   }
 
   // Upload avatar
   async uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
-    const formData = new FormData()
-    formData.append("avatar", file)
+    try {
+      const formData = new FormData()
+      formData.append("avatar", file)
 
-    const response = await fetch("/api/profile/avatar", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-      },
-      body: formData,
-    })
+      const token = localStorage.getItem('token')
+      const response = await axios.post(`${this.baseURL}/upload/avatar`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      })
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new ApiError(data.message || "Failed to upload avatar", response.status)
+      return { avatarUrl: response.data.avatar_url || response.data.url }
+    } catch (error: any) {
+      throw new ApiError(
+        error.response?.data?.detail || "Failed to upload avatar", 
+        error.response?.status || 500
+      )
     }
-
-    return data.data
   }
 
   // Change password
   async changePassword(data: ChangePasswordData): Promise<void> {
-    const response = await apiFetch<void>("/api/auth/change-password", {
-      method: "POST",
-      body: JSON.stringify(data),
-    })
-    if (!response.success) {
-      throw new ApiError("Failed to change password", 500)
+    try {
+      await axios.post(`${this.baseURL}/auth/change-password`, data, {
+        headers: getAuthHeaders()
+      })
+    } catch (error: any) {
+      throw new ApiError(
+        error.response?.data?.detail || "Failed to change password", 
+        error.response?.status || 500
+      )
     }
   }
 
   // Get user settings
   async getSettings(): Promise<UserSettings> {
-    const response = await apiFetch<UserSettings>("/api/settings")
-    if (!response.success || !response.data) {
-      throw new ApiError("Failed to fetch settings", 500)
+    try {
+      const response = await axios.get(`${this.baseURL}/users/settings`, {
+        headers: getAuthHeaders()
+      })
+      return response.data
+    } catch (error: any) {
+      throw new ApiError(
+        error.response?.data?.detail || "Failed to fetch settings", 
+        error.response?.status || 500
+      )
     }
-    return response.data
   }
 
   // Update user settings
   async updateSettings(settings: UserSettings): Promise<UserSettings> {
-    const response = await apiFetch<UserSettings>("/api/settings", {
-      method: "PUT",
-      body: JSON.stringify(settings),
-    })
-    if (!response.success || !response.data) {
-      throw new ApiError("Failed to update settings", 500)
+    try {
+      const response = await axios.put(`${this.baseURL}/users/settings`, settings, {
+        headers: getAuthHeaders()
+      })
+      return response.data
+    } catch (error: any) {
+      throw new ApiError(
+        error.response?.data?.detail || "Failed to update settings", 
+        error.response?.status || 500
+      )
     }
-    return response.data
   }
 
   // Export user data
   async exportData(): Promise<Blob> {
-    const response = await fetch("/api/profile/export", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-      },
-    })
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`${this.baseURL}/users/export`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        responseType: 'blob'
+      })
 
-    if (!response.ok) {
-      throw new ApiError("Failed to export data", response.status)
+      return response.data
+    } catch (error: any) {
+      throw new ApiError(
+        error.response?.data?.detail || "Failed to export data", 
+        error.response?.status || 500
+      )
     }
-
-    return response.blob()
   }
 
   // Delete account
   async deleteAccount(password: string): Promise<void> {
-    const response = await apiFetch<void>("/api/profile/delete", {
-      method: "DELETE",
-      body: JSON.stringify({ password }),
-    })
-    if (!response.success) {
-      throw new ApiError("Failed to delete account", 500)
+    try {
+      await axios.delete(`${this.baseURL}/users/me`, {
+        headers: getAuthHeaders(),
+        data: { password }
+      })
+    } catch (error: any) {
+      throw new ApiError(
+        error.response?.data?.detail || "Failed to delete account", 
+        error.response?.status || 500
+      )
     }
   }
 }

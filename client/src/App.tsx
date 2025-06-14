@@ -13,9 +13,10 @@ import "./App.css"
 import "./styles/toast.css"
 import { AuthProvider, useAuth } from "./context/AuthContext"
 import HomePage from "./pages/HomePage"
+import { ThemeProvider } from "./context/ThemeContext"
 
 function ChatApp() {
-  const [selectedChat, setSelectedChat] = useState<string | null>("1")
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
 
   return (
     <ChatProvider>
@@ -32,30 +33,32 @@ function ChatApp() {
 function App() {
   return (
     <Router>
-      <AuthProvider> {/* Wrap your entire app with AuthProvider */}
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route
-            path="/message"
-            element={
-              <RequireAuth>
-                <ChatApp />
-              </RequireAuth>
-            }
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route
-            path="/profile"
-            element={
-              <RequireAuth>
-                <Profile />
-              </RequireAuth>
-            }
-          />
-        </Routes>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route
+              path="/message"
+              element={
+                <RequireAuth>
+                  <ChatApp />
+                </RequireAuth>
+              }
+            />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route
+              path="/profile"
+              element={
+                <RequireAuth>
+                  <Profile />
+                </RequireAuth>
+              }
+            />
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   )
 }

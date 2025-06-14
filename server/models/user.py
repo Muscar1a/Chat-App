@@ -12,7 +12,7 @@ class UserModel(BaseModel):
     last_name: str | None = Field(None, max_length=100)
     username: str = Field(..., max_length=20)
     email: EmailStr = Field(..., max_length=50)
-    password: str = Field(...) 
+    password: str = Field(...)
     
     is_active: bool = True
     is_online: bool = False

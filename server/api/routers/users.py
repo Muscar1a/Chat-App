@@ -4,6 +4,7 @@ from service.token import TokenManager
 from exceptions.user import UserCreationError
 import schemas
 from crud.user import User
+from schemas.user import UserProfileUpdate
 from api.deps import (
     get_current_active_user,
     get_current_user,
@@ -58,6 +59,36 @@ async def read_me(
     user = await user_manager.get_by_id(current_user.id)
     return user
 
+@router.put(
+        "/me",
+        response_model=schemas.User
+)
+async def update_me(
+    profile_data: UserProfileUpdate,
+    user_manager: User = Depends(get_user_manager),
+    current_user: schemas.User = Depends(get_current_active_user)
+):
+    """Update current user's profile information"""
+    # print('----- updated_user', profile_data)
+    
+    updated_user = await user_manager.update_profile(
+        current_user.id, 
+        profile_data.model_dump()
+    )
+    return updated_user
+
+@router.get(
+    '/all',
+    status_code=status.HTTP_200_OK,
+    response_model=list[schemas.UserOfAll]
+)
+async def get_all_user(
+    user_manager: User = Depends(get_user_manager),
+    current_user: schemas.User = Depends(get_current_active_user),
+):
+    # any authenticated user can now list all others (except themselves)
+    return await user_manager.get_all_except_me(current_user.id)
+
 """
 @router.get(
         '/info/{user_id}',
@@ -87,18 +118,6 @@ async def get_user_by_username(
     return await user_manager.get_by_username(username)
 
     
-@router.get(
-    '/all',
-    status_code=status.HTTP_200_OK,
-    response_model=list[schemas.UserOfAll]
-)
-async def get_all_user(
-    user_manager: User = Depends(get_user_manager),
-    current_user: schemas.User = Depends(get_current_active_user),
-):
-    # any authenticated user can now list all others (except themselves)
-    return await user_manager.get_all_except_me(current_user.id)
-
 @router.put(
         '/update/info/{user_id}',
         status_code=status.HTTP_200_OK,
@@ -125,13 +144,4 @@ async def delete_user(
     deleted_user = await user_manager.delete_user(user_id)
     return deleted_user
 
-
-@router.get("/public_key/{user_id}")
-async def get_public_key(
-    user_id: str,
-    user_manager: User = Depends(get_user_manager),
-    current_user: schemas.User = Depends(get_current_active_user)
-):
-    public_key = await user_manager.get_public_key(user_id)
-    return public_key
 """

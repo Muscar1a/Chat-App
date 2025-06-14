@@ -135,6 +135,32 @@ class UserUpdater(BaseUserManager):
             return await self.get_by_id(updated_data.id)
         return None
 
+    async def update_profile(self, user_id: str, profile_data: dict) -> UserInDb:
+        """Update user profile data."""
+        try:
+            oid = ObjectId(user_id)
+        except InvalidId:
+            raise HTTPException(400, "Invalid user ID format")
+        
+        # Remove None values to avoid overwriting existing data with None
+        update_data = {k: v for k, v in profile_data.items() if v is not None}
+        
+        if not update_data:
+            return await self.get_by_id(user_id)
+        
+        result = await self.user_collection.update_one(
+            {'_id': oid},
+            {'$set': update_data}
+        )
+
+        if result.matched_count == 1:
+            return await self.get_by_id(user_id)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
 
 class UserDeleter(BaseUserManager):
     async def delete_user(self, id: str) -> dict:

@@ -9,6 +9,7 @@ import "../styles/auth.css"
 import axios from "axios"
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom"
+import { useTheme } from "../context/ThemeContext";
 
 export default function Login() {
   const [userName, setUserName] = useState("")
@@ -19,6 +20,7 @@ export default function Login() {
   const [errors, setErrors] = useState<{ userName?: string; password?: string; }>({})
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { resolvedTheme } = useTheme();
 
   const validateForm = () => {
     const newErrors: { userName?: string; password?: string } = {}
@@ -131,13 +133,13 @@ export default function Login() {
             {errors.password && <p className="error-message">{errors.password}</p>}
           </div>
 
-          <div className="remember-me">
+          {/*<div className="remember-me">
             <label className="checkbox-container">
               <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
               <span className="checkmark"></span>
               <span>Ghi nhớ đăng nhập</span>
             </label>
-          </div>
+          </div> */}
 
           <button type="submit" className="auth-button" disabled={isLoading}>
             {isLoading ? (

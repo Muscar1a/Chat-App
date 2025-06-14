@@ -39,10 +39,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
 
-  const login = (token: string) => {
+  const login = async (token: string) => {
     localStorage.setItem('token', token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setIsAuthenticated(true);
+
+    try {
+      const response = await axios.get('http://localhost:8000/users/me');
+      setUser(response.data);
+    } catch (error) {
+      console.error('Error fetching user data after login:', error);
+      // If fetching user fails, still keep authenticated but log error
+    }
   };
 
   const logout = async () => {
