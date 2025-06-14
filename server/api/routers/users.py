@@ -4,6 +4,7 @@ from service.token import TokenManager
 from exceptions.user import UserCreationError
 import schemas
 from crud.user import User
+from schemas.user import UserProfileUpdate
 from api.deps import (
     get_current_active_user,
     get_current_user,
@@ -57,6 +58,24 @@ async def read_me(
 ):
     user = await user_manager.get_by_id(current_user.id)
     return user
+
+@router.put(
+        "/me",
+        response_model=schemas.User
+)
+async def update_me(
+    profile_data: UserProfileUpdate,
+    user_manager: User = Depends(get_user_manager),
+    current_user: schemas.User = Depends(get_current_active_user)
+):
+    """Update current user's profile information"""
+    # print('----- updated_user', profile_data)
+    
+    updated_user = await user_manager.update_profile(
+        current_user.id, 
+        profile_data.model_dump()
+    )
+    return updated_user
 
 @router.get(
     '/all',

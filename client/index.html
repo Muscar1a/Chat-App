@@ -4,7 +4,52 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>Chat App</title>
+    
+    <!-- Theme initialization script to prevent flash -->
+    <script>
+      (function() {
+        try {
+          const savedTheme = localStorage.getItem('chat-app-theme');
+          const savedAccentColor = localStorage.getItem('chat-app-accent-color');
+          
+          // Apply theme immediately
+          if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+          } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+          
+          // Apply accent color immediately
+          if (savedAccentColor) {
+            const hexToRgb = function(hex) {
+              const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+              return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+              } : null;
+            };
+            
+            const rgb = hexToRgb(savedAccentColor);
+            if (rgb) {
+              document.documentElement.style.setProperty('--accent-primary', savedAccentColor);
+              document.documentElement.style.setProperty('--accent-secondary', 'rgba(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ', 0.1)');
+              document.documentElement.style.setProperty('--accent-secondary-dark', 'rgba(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ', 0.2)');
+            }
+          } else {
+            // Default accent color
+            document.documentElement.style.setProperty('--accent-primary', '#1677ff');
+            document.documentElement.style.setProperty('--accent-secondary', 'rgba(22, 119, 255, 0.1)');
+            document.documentElement.style.setProperty('--accent-secondary-dark', 'rgba(22, 119, 255, 0.2)');
+          }
+        } catch (e) {
+          // Fallback to light theme if any error
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.style.setProperty('--accent-primary', '#1677ff');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -32,6 +32,7 @@ class UserRead(UserBase):
     id: str
     first_name: str | None
     last_name: str | None
+    email: str | None = None
     is_active: bool
     is_online: bool
     is_disabled: bool
@@ -43,6 +44,11 @@ class UserUpdate(BaseModel):
     id: str
     password: Optional[str] = None
     # token_version: Optional[int] = None
+
+class UserProfileUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
 
 class UserUpdateToken(BaseModel):
     id: str

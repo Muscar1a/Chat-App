@@ -29,7 +29,6 @@ export default function ThemeSettings({ onUnsavedChanges }: ThemeSettingsProps) 
     '#f5222d', // Crimson
     '#fa541c', // Volcano
     '#faad14', // Gold
-    '#52c41a', // Lime
     '#2f54eb', // Geek Blue
   ];
   // Load saved theme when component mounts

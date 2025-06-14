@@ -20,21 +20,28 @@ const getAuthHeaders = () => {
 export interface UserProfile {
   id: string
   avatar?: string
-  firstName: string
-  lastName: string
+  first_name: string
+  last_name: string
+  username: string
   email: string
+  is_active: boolean
+  is_online: boolean
+  is_disabled: boolean
+  roles: string[]
+  token_version: number
   phone?: string
   bio?: string
   location?: string
   birthday?: string
   website?: string
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface UpdateProfileData {
-  firstName: string
-  lastName: string
+  first_name: string
+  last_name: string
+  email?: string
   phone?: string
   bio?: string
   location?: string
@@ -68,7 +75,7 @@ export interface UserSettings {
 }
 
 class ProfileService {
-  private baseURL = 'http://localhost:8000' // Adjust this to match your backend URL
+  private baseURL = 'http://localhost:8000'
 
   // Get user profile
   async getProfile(): Promise<UserProfile> {
@@ -121,25 +128,15 @@ class ProfileService {
         error.response?.status || 500
       )
     }
-  }  // Change password
+  }
+
+  // Change password
   async changePassword(data: ChangePasswordData): Promise<void> {
     try {
-      // Convert camelCase to snake_case for API
-      const requestData = {
-        current_password: data.currentPassword,
-        new_password: data.newPassword
-      }
-      
-      console.log('Sending password change request:', { 
-        current_password: data.currentPassword ? '[HIDDEN]' : 'empty',
-        new_password: data.newPassword ? '[HIDDEN]' : 'empty'
-      })
-      
-      await axios.post(`${this.baseURL}/auth/change-password`, requestData, {
+      await axios.post(`${this.baseURL}/auth/change-password`, data, {
         headers: getAuthHeaders()
       })
     } catch (error: any) {
-      console.error('Password change error:', error.response?.data)
       throw new ApiError(
         error.response?.data?.detail || "Failed to change password", 
         error.response?.status || 500
