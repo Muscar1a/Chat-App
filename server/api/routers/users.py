@@ -12,7 +12,7 @@ from api.deps import (
     get_user_manager,
     requires_role
 )
-from pydantic import constr
+from pydantic import constr, ValidationError
 from schemas.user import ObjectIdStr, UsernameStr
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -29,6 +29,28 @@ async def register(
     try:
         new_user = await user_manager.create_user(user_in)
         return new_user
+    except ValidationError as e:
+        # Handle password validation errors
+        error_details = []
+        for error in e.errors():
+            if 'password' in error.get('loc', []):
+                error_details.append({
+                    'field': 'password',
+                    'message': error['msg']
+                })
+            else:
+                error_details.append({
+                    'field': str(error.get('loc', ['unknown'])[0]),
+                    'message': error['msg']
+                })
+        
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                'error': 'Validation Error',
+                'errors': error_details
+            }
+        )
     except UserCreationError as e:
         print(e)
         print(e.field, e.message)
@@ -36,13 +58,22 @@ async def register(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail={
-                'error': 'Validation Field',
+                'error': 'User Creation Error',
                 'errors': [
                     {
-                        'field': "Username",
-                        'message': "Username already in use!"
+                        'field': e.field or "username",
+                        'message': e.message or "Username already in use!"
                     }
                 ]
+            }
+        )
+    except Exception as e:
+        print(f"Unexpected error during registration: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                'error': 'Internal Server Error',
+                'message': 'Registration failed. Please try again.'
             }
         )
 

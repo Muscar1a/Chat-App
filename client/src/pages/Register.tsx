@@ -4,7 +4,7 @@
 import type React from "react";
 
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import "../styles/auth.css";
 import axios from "axios";
@@ -23,6 +23,14 @@ export default function Register() {
     password?: string
     confirmPassword?: string
   }>({})
+
+  const passwordRequirements = [
+    { text: "Ít nhất 8 ký tự", met: password.length >= 8 },
+    { text: "Có chữ hoa", met: /[A-Z]/.test(password) },
+    { text: "Có chữ thường", met: /[a-z]/.test(password) },
+    { text: "Có số", met: /\d/.test(password) },
+    { text: "Có ký tự đặc biệt", met: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
+  ]
 
   const validateForm = () => {
     const newErrors: {
@@ -44,8 +52,10 @@ export default function Register() {
 
     if (!password) {
       newErrors.password = "Mật khẩu là bắt buộc"
-    } else if (password.length < 6) {
-      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự"
+    } else if (password.length < 8) {
+      newErrors.password = "Mật khẩu phải có ít nhất 8 ký tự"
+    } else if (!passwordRequirements.every((req) => req.met)) {
+      newErrors.password = "Mật khẩu không đáp ứng đủ yêu cầu bảo mật"
     }
 
     if (!confirmPassword) {
@@ -74,11 +84,36 @@ export default function Register() {
         window.location.href = "/login"
       } catch (error: any) {
         setIsLoading(false)
-        if (error.response && error.response.data && error.response.data.message) {
-          setErrors((prev) => ({
-            ...prev,
-            email: error.response.data.message,
-          }))
+        
+        if (error.response && error.response.data) {
+          const errorData = error.response.data;
+          
+          // Handle structured validation errors from server
+          if (errorData.errors && Array.isArray(errorData.errors)) {
+            const newErrors: any = {};
+            errorData.errors.forEach((err: any) => {
+              if (err.field === 'password') {
+                newErrors.password = err.message;
+              } else if (err.field === 'email') {
+                newErrors.email = err.message;
+              } else if (err.field === 'username') {
+                newErrors.userName = err.message;
+              }
+            });
+            setErrors(newErrors);
+          } else if (errorData.message) {
+            // Handle single error message
+            setErrors((prev) => ({
+              ...prev,
+              email: errorData.message,
+            }));
+          } else {
+            // Fallback for unknown error structure
+            setErrors((prev) => ({
+              ...prev,
+              email: "Đăng ký không thành công. Vui lòng thử lại.",
+            }));
+          }
         } else {
           setErrors((prev) => ({
             ...prev,
@@ -158,6 +193,20 @@ export default function Register() {
               </button>
             </div>
             {errors.password && <p className="error-message">{errors.password}</p>}
+            
+            {password && (
+              <div className="password-requirements">
+                <h4>Yêu cầu mật khẩu:</h4>
+                <ul className="requirements-list">
+                  {passwordRequirements.map((requirement, index) => (
+                    <li key={index} className={`requirement ${requirement.met ? "met" : ""}`}>
+                      <Check size={14} className="requirement-icon" />
+                      {requirement.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="form-group">

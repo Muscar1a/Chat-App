@@ -28,6 +28,27 @@ class UserCreate(UserBase):
     password: str
     # password2: str
     
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        """Validate password meets security requirements"""
+        if len(v) < 8:
+            raise ValueError("Mật khẩu phải có ít nhất 8 ký tự")
+        
+        if not re.search(r'[A-Z]', v):
+            raise ValueError("Mật khẩu phải có ít nhất một chữ hoa")
+        
+        if not re.search(r'[a-z]', v):
+            raise ValueError("Mật khẩu phải có ít nhất một chữ thường")
+        
+        if not re.search(r'\d', v):
+            raise ValueError("Mật khẩu phải có ít nhất một số")
+        
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
+            raise ValueError("Mật khẩu phải có ít nhất một ký tự đặc biệt")
+        
+        return v
+    
 class UserRead(UserBase):
     id: str
     first_name: str | None
