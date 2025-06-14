@@ -1,21 +1,19 @@
 "use client"
 
-import { LogOut, User, Palette, Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import ThemeSettings from "./ThemeSettings";
 import "../styles/user-profile.css";
 
 export default function UserProfile() {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [isThemeSettingsOpen, setIsThemeSettingsOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const { logout, user, loading } = useAuth()
-  const navigate = useNavigate()
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { logout, user, loading } = useAuth();
+  const navigate = useNavigate();
 
   const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen)
+    setIsDropdownOpen(!isDropdownOpen);
   }
 
   const handleLogout = async () => {
@@ -24,9 +22,14 @@ export default function UserProfile() {
       navigate("/login");
       setIsDropdownOpen(false);
     } catch (error) {
-      console.error("Lỗi khi đăng xuất:", error)
+      console.error("Lỗi khi đăng xuất:", error);
     }
-  }
+  };
+
+  const handleSettings = () => {
+    navigate("/profile");
+    setIsDropdownOpen(false);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,11 +38,11 @@ export default function UserProfile() {
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [])
+  }, []);
 
   if (loading || !user) {
     return (
@@ -103,7 +106,7 @@ export default function UserProfile() {
           </div>
 
           <div className="dropdown-menu">
-            <button className="dropdown-item" onClick={() => navigate('/profile')}>
+            <button className="dropdown-item" onClick={handleSettings}>
               <Settings size={18} />
               <span>Profile Settings</span>
             </button>
@@ -114,7 +117,6 @@ export default function UserProfile() {
           </div>
         </div>
       )}
-      <ThemeSettings isOpen={isThemeSettingsOpen} onClose={() => setIsThemeSettingsOpen(false)} />
     </div>
   )
 }

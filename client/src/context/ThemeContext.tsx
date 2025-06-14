@@ -10,10 +10,10 @@ interface ThemeContextType {
   resolvedTheme: "light" | "dark"
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("system")
+  const [theme, setTheme] = useState<Theme>("light")
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light")
 
   // Load theme from localStorage on mount
@@ -28,10 +28,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const updateResolvedTheme = () => {
       if (theme === "system") {
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-        setResolvedTheme(systemTheme)
+        const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        setResolvedTheme(isSystemDark ? "dark" : "light");
       } else {
-        setResolvedTheme(theme)
+        setResolvedTheme(theme);
       }
     }
 

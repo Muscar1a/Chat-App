@@ -1,132 +1,240 @@
-"use client"
+import { useState, useEffect } from 'react';
+import { Card, Radio, Switch, Slider, ColorPicker, Divider, Space, Typography, Button, message } from 'antd';
+import { BgColorsOutlined, FontSizeOutlined, MoonOutlined, SunOutlined } from '@ant-design/icons';
+import type { ColorPickerProps } from 'antd';
+import { useTheme } from '../context/ThemeContext';
 
-import { useEffect, useRef } from "react"
-import { X, Sun, Moon, Monitor, Check } from "lucide-react"
-import { useTheme } from "../context/ThemeContext"
-import "../styles/theme-settings.css"
+const { Title, Text } = Typography;
 
 interface ThemeSettingsProps {
-  isOpen: boolean
-  onClose: () => void
-  isInline?: boolean
+  onUnsavedChanges: (hasChanges: boolean) => void;
 }
 
-export default function ThemeSettings({ isOpen, onClose, isInline = false }: ThemeSettingsProps) {
-  const { theme, setTheme } = useTheme()
-  const modalRef = useRef<HTMLDivElement>(null)
+interface ExtendedThemeConfig {
+  primaryColor: string;
+  fontSize: number;
+  borderRadius: number;
+  compactMode: boolean;
+}
 
-  const themes = [
-    {
-      id: "light",
-      name: "Light",
-      description: "Clean and bright interface",
-      icon: Sun,
-    },
-    {
-      id: "dark",
-      name: "Dark",
-      description: "Easy on the eyes in low light",
-      icon: Moon,
-    },
-    {
-      id: "system",
-      name: "System",
-      description: "Follows your device settings",
-      icon: Monitor,
-    },
-  ]
+const defaultExtendedTheme: ExtendedThemeConfig = {
+  primaryColor: '#1677ff',
+  fontSize: 14,
+  borderRadius: 6,
+  compactMode: false,
+};
 
-  // Close modal when clicking outside
+export default function ThemeSettings({ onUnsavedChanges }: ThemeSettingsProps) {
+  const { theme, setTheme } = useTheme();
+  const [extendedTheme, setExtendedTheme] = useState<ExtendedThemeConfig>(defaultExtendedTheme);
+  const [originalTheme, setOriginalTheme] = useState<ExtendedThemeConfig>(defaultExtendedTheme);
+  const [originalMode, setOriginalMode] = useState(theme);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load extended theme từ localStorage khi component mount
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        onClose()
+    const savedExtendedTheme = localStorage.getItem('app-extended-theme');
+    if (savedExtendedTheme) {
+      try {
+        const parsed = JSON.parse(savedExtendedTheme);
+        setExtendedTheme(parsed);
+        setOriginalTheme(parsed);
+        applyExtendedTheme(parsed);
+      } catch (error) {
+        console.error('Error parsing saved extended theme:', error);
       }
     }
+    setOriginalMode(theme);
+  }, [theme]);
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside)
+  // Theo dõi thay đổi để báo unsaved changes
+  useEffect(() => {
+    const hasChanges = 
+      JSON.stringify(extendedTheme) !== JSON.stringify(originalTheme) ||
+      theme !== originalMode;
+    onUnsavedChanges(hasChanges);
+  }, [extendedTheme, originalTheme, theme, originalMode, onUnsavedChanges]);
+
+  const applyExtendedTheme = (themeConfig: ExtendedThemeConfig) => {
+    const root = document.documentElement;
+    
+    // Apply CSS variables
+    root.style.setProperty('--primary-color', themeConfig.primaryColor);
+    root.style.setProperty('--font-size-base', `${themeConfig.fontSize}px`);
+    root.style.setProperty('--border-radius-base', `${themeConfig.borderRadius}px`);
+    
+    // Apply compact mode
+    if (themeConfig.compactMode) {
+      root.classList.add('ant-compact');
+    } else {
+      root.classList.remove('ant-compact');
     }
+  };
 
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
+  const handleExtendedThemeChange = (key: keyof ExtendedThemeConfig, value: any) => {
+    const newTheme = { ...extendedTheme, [key]: value };
+    setExtendedTheme(newTheme);
+    applyExtendedTheme(newTheme);
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      localStorage.setItem('app-extended-theme', JSON.stringify(extendedTheme));
+      setOriginalTheme(extendedTheme);
+      setOriginalMode(theme);
+      message.success('Cài đặt giao diện đã được lưu!');
+    } catch (error) {
+      message.error('Có lỗi xảy ra khi lưu cài đặt!');
+    } finally {
+      setIsLoading(false);
     }
-  }, [isOpen, onClose])
-  if (!isOpen && !isInline) return null
+  };
 
-  const content = (
-    <div className="theme-settings">
-      <div className="theme-section">
-        <h3 className="theme-section-title">Chế độ hiển thị</h3>
-        <p className="theme-description">Chọn chế độ hiển thị phù hợp với bạn</p>        <div className="theme-options">
-          {themes.map((themeOption) => {
-            const IconComponent = themeOption.icon
-            const isSelected = theme === themeOption.id
+  const handleReset = () => {
+    setExtendedTheme(defaultExtendedTheme);
+    applyExtendedTheme(defaultExtendedTheme);
+    setTheme('light');
+  };
 
-            return (
-              <div
-                key={themeOption.id}
-                className={`theme-option ${isSelected ? "selected" : ""}`}
-                onClick={() => setTheme(themeOption.id as "light" | "dark" | "system")}
-              >
-                <div className="theme-option-icon">
-                  <IconComponent size={24} />
-                </div>
-                <div className="theme-option-content">
-                  <h4 className="theme-option-name">{themeOption.name}</h4>
-                  <p className="theme-option-description">{themeOption.description}</p>
-                </div>
-                {isSelected && (
-                  <div className="theme-option-check">
-                    <Check size={20} />
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="theme-section">
-        <h3 className="theme-section-title">Xem trước</h3>
-        <div className="preview-container">
-          <div className="preview-sidebar">
-            <div className="preview-header">Tin nhắn</div>
-            <div className="preview-chat-item">
-              <div className="preview-avatar"></div>
-              <div className="preview-content">
-                <div className="preview-name">Nguyễn Văn A</div>
-                <div className="preview-message">Xin chào!</div>
-              </div>
-            </div>
-          </div>
-          <div className="preview-chat">
-            <div className="preview-chat-header">Chat với AI</div>
-            <div className="preview-messages">
-              <div className="preview-message-bubble own">Chào bạn!</div>
-              <div className="preview-message-bubble other">Tôi có thể giúp gì cho bạn?</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  if (isInline) {
-    return content
-  }
+  const colorPickerProps: ColorPickerProps = {
+    showText: true,
+    size: 'small',
+  };
 
   return (
-    <div className="modal-overlay">
-      <div className="theme-settings-modal" ref={modalRef}>
-        <div className="modal-header">
-          <h2>Cài đặt giao diện</h2>
-          <button className="modal-close-button" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-        {content}
+    <div className="theme-settings-container">
+      <div className="form-header">
+        <Title level={2}>Cài đặt giao diện</Title>
+        <Text type="secondary">Tùy chỉnh giao diện ứng dụng theo sở thích của bạn</Text>
       </div>
+
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* Theme Mode */}
+        <Card title={
+          <Space>
+            <MoonOutlined />
+            <span>Chế độ giao diện</span>
+          </Space>
+        }>
+          <Radio.Group
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            style={{ width: '100%' }}
+          >
+            <Space direction="vertical">
+              <Radio value="light">
+                <Space>
+                  <SunOutlined />
+                  <span>Sáng</span>
+                </Space>
+              </Radio>
+              <Radio value="dark">
+                <Space>
+                  <MoonOutlined />
+                  <span>Tối</span>
+                </Space>
+              </Radio>
+              <Radio value="system">
+                <Space>
+                  <BgColorsOutlined />
+                  <span>Tự động (theo hệ thống)</span>
+                </Space>
+              </Radio>
+            </Space>
+          </Radio.Group>
+        </Card>
+
+        {/* Primary Color */}
+        <Card title={
+          <Space>
+            <BgColorsOutlined />
+            <span>Màu chủ đạo</span>
+          </Space>
+        }>
+          <Space align="center">
+            <Text>Chọn màu chủ đạo cho ứng dụng:</Text>
+            <ColorPicker
+              {...colorPickerProps}
+              value={extendedTheme.primaryColor}
+              onChange={(color) => handleExtendedThemeChange('primaryColor', color.toHexString())}
+            />
+          </Space>
+        </Card>
+
+        {/* Font Size */}
+        <Card title={
+          <Space>
+            <FontSizeOutlined />
+            <span>Kích thước chữ</span>
+          </Space>
+        }>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Text>Kích thước chữ cơ bản: {extendedTheme.fontSize}px</Text>
+            <Slider
+              min={12}
+              max={18}
+              value={extendedTheme.fontSize}
+              onChange={(value) => handleExtendedThemeChange('fontSize', value)}
+              marks={{
+                12: '12px',
+                14: '14px',
+                16: '16px',
+                18: '18px',
+              }}
+            />
+          </Space>
+        </Card>
+
+        {/* Border Radius */}
+        <Card title="Bo góc">
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Text>Độ bo góc: {extendedTheme.borderRadius}px</Text>
+            <Slider
+              min={0}
+              max={12}
+              value={extendedTheme.borderRadius}
+              onChange={(value) => handleExtendedThemeChange('borderRadius', value)}
+              marks={{
+                0: '0px',
+                4: '4px',
+                8: '8px',
+                12: '12px',
+              }}
+            />
+          </Space>
+        </Card>
+
+        {/* Compact Mode */}
+        <Card title="Chế độ gọn">
+          <Space align="center">
+            <Switch
+              checked={extendedTheme.compactMode}
+              onChange={(checked) => handleExtendedThemeChange('compactMode', checked)}
+            />
+            <Text>Kích hoạt chế độ gọn (giảm khoảng cách giữa các thành phần)</Text>
+          </Space>
+        </Card>
+
+        <Divider />
+
+        {/* Action Buttons */}
+        <Space>
+          <Button 
+            type="primary" 
+            onClick={handleSave}
+            loading={isLoading}
+          >
+            Lưu cài đặt
+          </Button>
+          <Button onClick={handleReset}>
+            Đặt lại mặc định
+          </Button>
+        </Space>
+      </Space>
     </div>
-  )
+  );
 }
