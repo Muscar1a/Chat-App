@@ -286,8 +286,7 @@ export default function ProfileForm({ onUnsavedChanges }: ProfileFormProps) {
           </div>
         </div>
 
-        {/* Additional Information */}
-        <div className="form-section">
+        {/* <div className="form-section">
           <h3 className="section-title">Thông tin bổ sung</h3>
 
           <div className="form-group">
@@ -331,7 +330,7 @@ export default function ProfileForm({ onUnsavedChanges }: ProfileFormProps) {
               {errors.website && <span className="error-message">{errors.website}</span>}
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="form-actions">
           <button type="submit" className="save-button" disabled={isLoading}>

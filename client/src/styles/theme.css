@@ -239,7 +239,8 @@
 }
 
 .new-chat-button:hover {
-  background: #2563eb;
+  background: var(--accent-primary);
+  filter: brightness(1.1);
   transform: scale(1.05);
 }
 

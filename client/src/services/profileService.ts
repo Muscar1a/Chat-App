@@ -121,15 +121,25 @@ class ProfileService {
         error.response?.status || 500
       )
     }
-  }
-
-  // Change password
+  }  // Change password
   async changePassword(data: ChangePasswordData): Promise<void> {
     try {
-      await axios.post(`${this.baseURL}/auth/change-password`, data, {
+      // Convert camelCase to snake_case for API
+      const requestData = {
+        current_password: data.currentPassword,
+        new_password: data.newPassword
+      }
+      
+      console.log('Sending password change request:', { 
+        current_password: data.currentPassword ? '[HIDDEN]' : 'empty',
+        new_password: data.newPassword ? '[HIDDEN]' : 'empty'
+      })
+      
+      await axios.post(`${this.baseURL}/auth/change-password`, requestData, {
         headers: getAuthHeaders()
       })
     } catch (error: any) {
+      console.error('Password change error:', error.response?.data)
       throw new ApiError(
         error.response?.data?.detail || "Failed to change password", 
         error.response?.status || 500

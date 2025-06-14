@@ -19,7 +19,6 @@ export default function PasswordChange({ onUnsavedChanges }: PasswordChangeProps
     newPassword: "",
     confirmPassword: "",
   })
-
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -28,6 +27,7 @@ export default function PasswordChange({ onUnsavedChanges }: PasswordChangeProps
 
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [successMessage, setSuccessMessage] = useState("")
 
   const passwordRequirements = [
     { text: "Ít nhất 8 ký tự", met: passwords.newPassword.length >= 8 },
@@ -36,7 +36,6 @@ export default function PasswordChange({ onUnsavedChanges }: PasswordChangeProps
     { text: "Có số", met: /\d/.test(passwords.newPassword) },
     { text: "Có ký tự đặc biệt", met: /[!@#$%^&*(),.?":{}|<>]/.test(passwords.newPassword) },
   ]
-
   const handleInputChange = (field: string, value: string) => {
     const newPasswords = { ...passwords, [field]: value }
     setPasswords(newPasswords)
@@ -48,6 +47,11 @@ export default function PasswordChange({ onUnsavedChanges }: PasswordChangeProps
     // Clear error for this field
     if (errors[field]) {
       setErrors({ ...errors, [field]: "" })
+    }
+
+    // Clear success message when user starts typing
+    if (successMessage) {
+      setSuccessMessage("")
     }
   }
 
@@ -95,9 +99,7 @@ export default function PasswordChange({ onUnsavedChanges }: PasswordChangeProps
       await profileService.changePassword({
         currentPassword: passwords.currentPassword,
         newPassword: passwords.newPassword,
-      })
-
-      // Reset form
+      })      // Reset form
       setPasswords({
         currentPassword: "",
         newPassword: "",
@@ -105,15 +107,20 @@ export default function PasswordChange({ onUnsavedChanges }: PasswordChangeProps
       })
       onUnsavedChanges(false)
 
+      // Set success message
+      setSuccessMessage("Mật khẩu đã được thay đổi thành công!")
+
       addToast({
         type: "success",
         title: "Đổi mật khẩu thành công!",
         message: "Mật khẩu của bạn đã được cập nhật.",
-      })
-    } catch (error) {
+      })} catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 400) {
           setErrors({ currentPassword: "Mật khẩu hiện tại không đúng" })
+        } else if (error.status === 422) {
+          // Validation error - likely password requirements not met
+          setErrors({ newPassword: "Mật khẩu mới không đáp ứng yêu cầu bảo mật" })
         }
         addToast({
           type: "error",
@@ -132,10 +139,15 @@ export default function PasswordChange({ onUnsavedChanges }: PasswordChangeProps
   }
 
   return (
-    <div className="password-change-container">
-      <div className="form-header">
+    <div className="password-change-container">      <div className="form-header">
         <h2>Đổi mật khẩu</h2>
         <p>Cập nhật mật khẩu để bảo mật tài khoản của bạn</p>
+        {successMessage && (
+          <div className="success-message">
+            <Check size={16} />
+            {successMessage}
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="password-form">

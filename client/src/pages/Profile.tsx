@@ -41,6 +41,7 @@ export default function Profile() {
           <span>Quay lại</span>
         </Link>
         <h1 className="profile-title">Cài đặt tài khoản</h1>
+        <div className="header-spacer"></div>
       </div>
 
       <div className="profile-content">

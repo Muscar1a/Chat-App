@@ -29,7 +29,7 @@ class UserCreate(UserBase):
     # password2: str
     
 class UserRead(UserBase):
-    id: ObjectIdStr
+    id: str
     first_name: str | None
     last_name: str | None
     is_active: bool
@@ -56,3 +56,22 @@ class UserInDb(UserRead):
 
 class UserOfAll(User):
     id: str
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+    
+    @field_validator('new_password')
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not re.search(r'[a-z]', v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not re.search(r'\d', v):
+            raise ValueError('Password must contain at least one digit')
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
+            raise ValueError('Password must contain at least one special character')
+        return v

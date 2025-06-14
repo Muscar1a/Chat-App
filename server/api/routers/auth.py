@@ -161,3 +161,38 @@ async def logout(
     
     return {"msg": "Logged out and revoked prior tokens"}
 
+# Change password endpoint
+@router.post("/change-password")
+@limiter.limit("3/10minute")
+async def change_password(
+    request: Request,
+    req: schemas.ChangePasswordRequest,
+    current_user: schemas.User = Depends(get_current_active_user),
+    user_manager: User = Depends(get_user_manager),
+):
+    # Get current user data
+    user = await user_manager.get_by_id(current_user.id)
+    if not user:
+        raise HTTPException(404, "User not found")
+    
+    # Verify current password
+    if not verify_password(req.current_password, user.get('password')):
+        raise HTTPException(
+            status_code=400,
+            detail="Current password is incorrect"
+        )
+    
+    # Check if new password is different from current
+    if verify_password(req.new_password, user.get('password')):
+        raise HTTPException(
+            status_code=400,
+            detail="New password must be different from your current password"
+        )
+    
+    # Hash and update password
+    hashed_password = get_password_hash(req.new_password)
+    updated = UserUpdate(id=current_user.id, password=hashed_password)
+    await user_manager.update_user(updated)
+    
+    return {"msg": "Password changed successfully"}
+

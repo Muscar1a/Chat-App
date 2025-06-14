@@ -3,17 +3,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%);
+  background: var(--bg-secondary, linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%));
   padding: 20px;
+  transition: background 0.3s ease;
 }
 
 .auth-card {
   width: 100%;
   max-width: 480px;
-  background: white;
+  background: var(--bg-primary, white);
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 25px var(--shadow, rgba(0, 0, 0, 0.08));
   padding: 40px;
+  border: 1px solid var(--border-primary, transparent);
+  transition: all 0.3s ease;
 }
 
 .auth-header {
@@ -24,13 +27,15 @@
 .auth-title {
   font-size: 28px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary, #111827);
   margin-bottom: 8px;
+  transition: color 0.3s ease;
 }
 
 .auth-subtitle {
   font-size: 16px;
-  color: #6b7280;
+  color: var(--text-secondary, #6b7280);
+  transition: color 0.3s ease;
 }
 
 .social-login {
@@ -118,22 +123,23 @@
 .form-label {
   font-size: 14px;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-primary, #374151);
+  transition: color 0.3s ease;
 }
 
 .input-container {
   display: flex;
   align-items: center;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-primary, #d1d5db);
   border-radius: 8px;
-  background: white;
+  background: var(--bg-primary, white);
   transition: border-color 0.2s, box-shadow 0.2s;
-  padding: 0 4px; /* Thêm padding để tạo khoảng cách */
+  padding: 0 4px;
 }
 
 .input-container:focus-within {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--accent-primary, #3b82f6);
+  box-shadow: 0 0 0 3px var(--accent-secondary, rgba(59, 130, 246, 0.1));
 }
 
 .input-container.error {
@@ -141,10 +147,11 @@
 }
 
 .input-icon {
-  color: #9ca3af;
+  color: var(--text-secondary, #9ca3af);
   margin-left: 8px;
   margin-right: 8px;
   flex-shrink: 0;
+  transition: color 0.3s ease;
 }
 
 .form-input {
@@ -154,6 +161,12 @@
   outline: none;
   font-size: 16px;
   background: transparent;
+  color: var(--text-primary, #111827);
+  transition: color 0.3s ease;
+}
+
+.form-input::placeholder {
+  color: var(--text-secondary, #9ca3af);
 }
 
 .password-toggle {
@@ -249,7 +262,7 @@
   gap: 8px;
   width: 100%;
   padding: 14px;
-  background: #3b82f6;
+  background: var(--accent-primary, #3b82f6);
   color: white;
   border: none;
   border-radius: 8px;
@@ -261,7 +274,8 @@
 }
 
 .auth-button:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--accent-primary, #2563eb);
+  filter: brightness(1.1);
 }
 
 .auth-button:disabled {
@@ -294,13 +308,15 @@
   text-align: center;
   margin-top: 24px;
   font-size: 14px;
-  color: #4b5563;
+  color: var(--text-secondary, #4b5563);
+  transition: color 0.3s ease;
 }
 
 .auth-link {
-  color: #3b82f6;
+  color: var(--accent-primary, #3b82f6);
   font-weight: 500;
   text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 .auth-link:hover {

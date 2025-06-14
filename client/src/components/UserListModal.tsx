@@ -133,12 +133,12 @@ export default function UserListModal({ isOpen, onClose, onSelectUser }: UserLis
                 onClick={() => onSelectUser(
                   user.id,
                   getDisplayName(user),
-                  user.avatar || "/original_user_image.svg?height=40&width=40"
+                  user.avatar || "/original_user_image.jpg?height=40&width=40"
                 )}
               >
                 <div className="user-list-avatar-container">
                   <img
-                    src={user.avatar || "/original_user_image.svg?height=40&width=40"}
+                    src={user.avatar || "/original_user_image.jpg?height=40&width=40"}
                     alt={getDisplayName(user)}
                     className="user-list-avatar"
                   />
