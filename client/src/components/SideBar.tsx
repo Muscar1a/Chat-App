@@ -7,6 +7,7 @@ import UserProfile from "./UserProfile";
 import UserListModal from "./UserListModal";
 import axios from "axios";
 import { Chat } from "../types/chat";
+import { getDisplayName } from "../utils/userUtils";
 
 interface SidebarProps {
   selectedChat: string | null
@@ -40,7 +41,7 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
 
             return {
               id: chat.chat_id,
-              name: chatInfo.recipient_profile?.username || 'Unknown User',
+              name: getDisplayName(chatInfo.recipient_profile),
               lastMessage: chat.messages?.length > 0
                 ? chat.messages[chat.messages.length - 1].message
                 : "No messages yet",

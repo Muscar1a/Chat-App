@@ -1,7 +1,5 @@
 "use client"
 
-import { Phone, Video, MoreVertical } from "lucide-react"
-
 interface ChatHeaderProps {
   name: string
   status: string

@@ -1,13 +1,14 @@
 "use client"
 
 import type React from "react";
-
 import { useState, useRef, useEffect } from "react";
 import { Send, Paperclip, Smile } from "lucide-react";
 import MessageBubble from "./MessageBubble";
 import ChatHeader from "./ChatHeader";
 import { useAuth } from "../context/AuthContext";
 import { useWebSocket } from "../hooks/useWebSocket";
+import axios from "axios";
+import { getDisplayName } from "../utils/userUtils";
 
 interface Message {
   id: string
@@ -20,11 +21,11 @@ interface ChatWindowProps {
   chatId: string | null
 };
 
-
 export default function ChatWindow({ chatId }: ChatWindowProps) {
   const [messageText, setMessageText] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [chatInfo, setChatInfo] = useState<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { user } = useAuth()
   const token = localStorage.getItem('token')
@@ -49,8 +50,42 @@ export default function ChatWindow({ chatId }: ChatWindowProps) {
     chatId,
     token,
     onMessageReceived: handleMessageReceived,
-    onOldMessagesLoaded: handleOldMessagesLoaded
-  })
+    onOldMessagesLoaded: handleOldMessagesLoaded,
+  });
+
+  // Load chat info when chatId changes
+  useEffect(() => {
+    const loadChatInfo = async () => {
+      if (!chatId) {
+        setChatInfo(null);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://localhost:8000/chat/private/info/${chatId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setChatInfo(response.data);
+        console.log("Chat info loaded:", response.data);
+      } catch (error) {
+        console.error("Error loading chat info:", error);
+        setChatInfo(null);
+      }
+    };
+
+    loadChatInfo();
+  }, [chatId, token]);
+
+  // Helper function to get display name for the chat recipient
+  const getChatRecipientName = () => {
+    if (!chatInfo?.recipient_profile) {
+      return "Unknown User";
+    }
+    
+    return getDisplayName(chatInfo.recipient_profile);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -102,15 +137,15 @@ export default function ChatWindow({ chatId }: ChatWindowProps) {
   return (
     <div className="chat-window">
       <ChatHeader
-        name={
-          user
-            ? user.first_name && user.last_name
-              ? `${user.first_name} ${user.last_name}`
-              : user.first_name || user.last_name || user.username
-            : ""
+        name={getChatRecipientName()}
+        status={
+          chatInfo?.recipient_profile?.is_online 
+            ? "Online" 
+            : isConnected 
+              ? "Offline" 
+              : connectionError || "Connecting..."
         }
-        status={isConnected ? "Online" : connectionError || "Connecting..."}
-        avatar="/original_user_image.jpg?height=40&width=40"
+        avatar={chatInfo?.recipient_profile?.avatar || "/original_user_image.jpg?height=40&width=40"}
       />
       <div className="messages-container">
         {messages.map((msg) => {

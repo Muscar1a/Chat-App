@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Search, Loader2, AlertCircle } from "lucide-react";
 import axios from "axios";
+import { getDisplayName } from "../utils/userUtils";
 
 interface User {
   id: string
@@ -27,18 +28,6 @@ export default function UserListModal({ isOpen, onClose, onSelectUser }: UserLis
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [creatingChat, setCreatingChat] = useState<string | null>(null)
-
-  const getDisplayName = (user: User): string => {
-    if (user.first_name && user.last_name) {
-      return `${user.first_name} ${user.last_name}`;
-    } else if (user.first_name) {
-      return user.first_name;
-    } else if (user.last_name) {
-      return user.last_name;
-    } else {
-      return user.username;
-    }
-  }
 
   useEffect(() => {
     if (isOpen) {
