@@ -27,7 +27,7 @@ export default function Profile() {
       <div className="profile-header">
         <Link to="/message" className="back-button">
           <ArrowLeft size={20} />
-          <span>Quay lại chat</span>
+          <span>Quay lại</span>
         </Link>
         <h1 className="profile-title">Cài đặt tài khoản</h1>
       </div>

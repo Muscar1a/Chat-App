@@ -18,7 +18,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     <div className={`message-bubble-container ${message.isOwn ? "own" : "other"}`}>
       {!message.isOwn && (
         <img
-          src={message.avatar || "/placeholder.svg?height=32&width=32"}
+          src={message.avatar || "/original_user_image.jpg?height=32&width=32"}
           alt={message.sender}
           className="message-avatar"
         />

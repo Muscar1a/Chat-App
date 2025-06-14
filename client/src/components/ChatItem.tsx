@@ -12,7 +12,7 @@ export default function ChatItem({ chat, isSelected, onClick }: ChatItemProps) {
   return (
     <div className={`chat-item ${isSelected ? "selected" : ""}`} onClick={onClick}>
       <div className="chat-item-avatar-container">
-        <img src={chat.avatar || "/placeholder.svg"} alt={chat.name} className="chat-item-avatar" />
+        <img src={chat.avatar || "/original_user_image.jpg"} alt={chat.name} className="chat-item-avatar" />
         {chat.isOnline && <div className="online-indicator" />}
       </div>
 

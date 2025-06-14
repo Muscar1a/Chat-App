@@ -14,7 +14,7 @@ export default function ChatHeader({ name, status, avatar, statusColor = "#10b98
     <div className="chat-header">
       <div className="chat-header-info">
         <div className="chat-header-avatar-container">
-          <img src={avatar || "/placeholder.svg"} alt={name} className="chat-header-avatar" />
+          <img src={avatar || "/original_user_image.jpg"} alt={name} className="chat-header-avatar" />
           <div className="chat-header-status-indicator" style={{ background: statusColor }} />
         </div>
         <div className="chat-header-details">

@@ -28,11 +28,6 @@ export default function UserProfile() {
     }
   }
 
-  const handleThemeSettings = () => {
-    setIsThemeSettingsOpen(true)
-    setIsDropdownOpen(false)
-  }
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -109,16 +104,8 @@ export default function UserProfile() {
 
           <div className="dropdown-menu">
             <button className="dropdown-item" onClick={() => navigate('/profile')}>
-              <User size={18} />
-              <span>Profile Settings</span>
-            </button>
-            <button className="dropdown-item">
               <Settings size={18} />
-              <span>Preferences</span>
-            </button>
-            <button className="dropdown-item" onClick={handleThemeSettings}>
-              <Palette size={18} />
-              <span>Theme Settings</span>
+              <span>Profile Settings</span>
             </button>
             <button className="dropdown-item sign-out" onClick={handleLogout}>
               <LogOut size={18} />
