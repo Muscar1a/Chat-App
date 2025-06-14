@@ -12,6 +12,25 @@ export default function UserProfile() {
   const { logout, user, loading } = useAuth();
   const navigate = useNavigate();
 
+  // Helper function to get display name with priority: first+last name -> first name -> last name -> username
+  const getDisplayName = () => {
+    if (!user) return "User";
+    
+    if (user.first_name && user.last_name) {
+      return `${user.first_name} ${user.last_name}`;
+    }
+    
+    if (user.first_name) {
+      return user.first_name;
+    }
+    
+    if (user.last_name) {
+      return user.last_name;
+    }
+    
+    return user.username || "User";
+  };
+
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   }
@@ -71,7 +90,7 @@ export default function UserProfile() {
           />
         </div>
         <div className="user-info">
-          <h3 className="user-name">{user?.username || "John Doe"}</h3>
+          <h3 className="user-name">{getDisplayName()}</h3>
           <p className="user-status">Online</p>
         </div>
         <div className="dropdown-arrow">
@@ -96,11 +115,11 @@ export default function UserProfile() {
             <div className="dropdown-user-avatar">
               <img
                 src={user?.avatar || "/original_user_image.jpg?height=40&width=40"}
-                alt={user?.username || "Loading ..."}
+                alt={getDisplayName()}
               />
             </div>
             <div className="dropdown-user-info">
-              <p className="dropdown-user-name">{user?.username || "Loading ..."}</p>
+              <p className="dropdown-user-name">{getDisplayName()}</p>
               <p className="dropdown-user-email">{user?.email || "Loading ..."}</p>
             </div>
           </div>

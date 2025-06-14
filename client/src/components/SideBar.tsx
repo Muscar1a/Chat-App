@@ -18,6 +18,7 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
   const [isUserListOpen, setIsUserListOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [isLoadingChats, setIsLoadingChats] = useState(true);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   const filteredChats = chats.filter((chat) => chat.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
@@ -73,37 +74,112 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
     }
   };
 
-  const fetchOrCreateChat = async (recipientId: string) => {
+  // Helper function to verify chat exists
+  const verifyChatExists = async (chatId: string, maxRetries = 3): Promise<boolean> => {
+    const token = localStorage.getItem('token');
+    
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        console.log(`Verifying chat ${chatId} exists (attempt ${i + 1}/${maxRetries})`);
+        const response = await axios.get(`http://localhost:8000/chat/private/info/${chatId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.data && response.data.chat_id === chatId) {
+          console.log(`✅ Chat ${chatId} verified successfully`);
+          return true;
+        }
+      } catch (error) {
+        console.log(`❌ Chat verification failed (attempt ${i + 1}): ${error}`);
+        
+        // Wait before retry (exponential backoff)
+        if (i < maxRetries - 1) {
+          const waitTime = Math.pow(2, i) * 500; // 500ms, 1s, 2s
+          console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+    }
+    
+    console.log(`❌ Chat ${chatId} verification failed after ${maxRetries} attempts`);
+    return false;
+  };
+
+  const fetchOrCreateChat = async (recipientId: string): Promise<void> => {
     console.log("--> fetchOrCreateChat called with recipientId:", recipientId);
     const token = localStorage.getItem('token');
 
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    setIsCreatingChat(true);
+    
     try {
       // 1) Thử route "already exists" trước
       const response = await axios.get(
         `http://localhost:8000/chat/private/recipient/chat-id/${recipientId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("Fetched existing chat ID:", response.data.chat_id);
-      return response.data.chat_id;
+      console.log("✅ Fetched existing chat ID:", response.data.chat_id);
+      const chatId = response.data.chat_id;
+      
+      // Verify existing chat before navigating
+      const isValid = await verifyChatExists(chatId);
+      if (!isValid) {
+        throw new Error("Existing chat verification failed");
+      }
+      
+      // **Navigate to existing chat**
+      onSelectChat(chatId);
+      setIsUserListOpen(false);
+      
     } catch (error: any) {
       // 2) Không tìm thấy → tạo mới
-      if (error.response?.status === 404) {
-        console.log("Chat not found, creating new chat via GET (as per original).");
-        const createResponse = await axios.get(
-          `http://localhost:8000/chat/private/recipient/create-chat/${recipientId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        console.log("Chat created (via GET):", createResponse.data);
+      if (error.response?.status === 404 || error.message?.includes("verification failed")) {
+        console.log("📝 Chat not found or invalid, creating new chat...");
+        
+        try {
+          const createResponse = await axios.get(
+            `http://localhost:8000/chat/private/recipient/create-chat/${recipientId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          console.log("📨 Chat creation response:", createResponse.data);
 
-        // **PICK THE NESTED chat_id**
-        const newChatId = createResponse.data.chat.chat_id;
-        console.log("Extracted new chat ID:", newChatId);
-        return newChatId;
+          // **PICK THE NESTED chat_id**
+          const newChatId = createResponse.data.chat?.chat_id;
+          if (!newChatId) {
+            throw new Error("No chat ID returned from creation endpoint");
+          }
+          
+          console.log("🆕 New chat ID:", newChatId);
+          
+          // **Wait and verify new chat exists before navigating**
+          const isValid = await verifyChatExists(newChatId, 5); // More retries for new chat
+          if (!isValid) {
+            throw new Error("New chat verification failed after creation");
+          }
+          
+          // **Refresh chat list first to include new chat**
+          console.log("🔄 Refreshing chat list...");
+          await loadExistingChats();
+          
+          // **Then navigate to new chat**
+          console.log("🚀 Navigating to new chat");
+          onSelectChat(newChatId);
+          setIsUserListOpen(false);
+          
+        } catch (createError: any) {
+          console.error("❌ Error creating chat:", createError);
+          throw new Error(`Failed to create chat: ${createError.response?.data?.detail || createError.message}`);
+        }
+      } else {
+        // Other errors
+        console.error("❌ Unexpected error:", error.response?.data || error.message);
+        throw new Error(`Unexpected error: ${error.response?.data?.detail || error.message}`);
       }
-
-      // any other error, rethrow
-      console.error("Error fetching/creating chat:", error.response?.data || error.message);
-      throw error;
+    } finally {
+      setIsCreatingChat(false);
     }
   };
 
@@ -128,18 +204,35 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
       </div>
 
       <div className="chat-list">
-        {filteredChats.map((chat) => (
-          <ChatItem
-            key={chat.id}
-            chat={chat}
-            isSelected={selectedChat === chat.id}
-            onClick={() => onSelectChat(chat.id)}
-          />
-        ))}
+        {isLoadingChats ? (
+          <div className="loading-chats">
+            <div className="loading-spinner"></div>
+            <p>Loading chats...</p>
+          </div>
+        ) : filteredChats.length > 0 ? (
+          filteredChats.map((chat) => (
+            <ChatItem
+              key={chat.id}
+              chat={chat}
+              isSelected={selectedChat === chat.id}
+              onClick={() => onSelectChat(chat.id)}
+            />
+          ))
+        ) : (
+          <div className="no-chats">
+            <p>No conversations yet</p>
+            <p>Start a new chat to begin messaging</p>
+          </div>
+        )}
       </div>
 
-      <button className="new-chat-button" onClick={() => setIsUserListOpen(true)}>
+      <button 
+        className={`new-chat-button ${isCreatingChat ? 'creating' : ''}`} 
+        onClick={() => setIsUserListOpen(true)}
+        disabled={isCreatingChat}
+      >
         <Plus size={24} />
+        {isCreatingChat && <span className="creating-text">Creating...</span>}
       </button>
 
       <UserListModal

@@ -78,10 +78,15 @@ class BaseUserManager:
             user_id: str,
             recipient_model: MessageRecipient
     ):
+        print('[-] Inserting user id:', user_id)
+        print('[-] Inserting recipient:', recipient_model.model_dump())
         result = await self.user_collection.update_one(
-            {'id': user_id},
+            {'_id': ObjectId(user_id)},
             {'$push': {'private_message_recipients': recipient_model.model_dump()}}
         )
+        print('[-] Result:', result)
+        print('[-] Matched count:', result.matched_count)
+        print('[-] Modified count:', result.modified_count)
         if result.matched_count == 1 and result.modified_count == 1:
             return True
         

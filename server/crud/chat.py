@@ -107,7 +107,6 @@ class PrivateChatManager(BaseChatManager):
         recipient_id: str
     ) -> schemas.PrivateChat:
         print("-" * 50)
-        print("-" * 50)
         
         ids = [current_user_id, recipient_id]
         new_chat = PrivateChatModel(member_ids=ids)
@@ -129,13 +128,14 @@ class PrivateChatManager(BaseChatManager):
         for user_id, recipient_id in message_recipients:
             recipient_model = MessageRecipientModel(
                 recipient_id=recipient_id, chat_id=new_chat.chat_id)
-            # print('recipient_model', recipient_model)
+            print('[+] recipient_model', recipient_model)
 
             # add chat_id to member's private_message_recipients field
-            insertd = await self.user_manager.insert_private_message_recipient(
+            inserted = await self.user_manager.insert_private_message_recipient(
                 user_id, recipient_model
             )
-            if not insertd:
+            print('[+] inserted', inserted)
+            if not inserted:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail='Message recipient was not added to user.'
@@ -181,7 +181,6 @@ class PrivateChatManager(BaseChatManager):
         # user = await self.chat_collection.find_one(query)
 
         user = await self.user_manager.get_by_id(current_user_id)
-        # print('user[\'private_message_recipients\']: ', user['private_message_recipients'] )
         if user['private_message_recipients']:
             for recipient in user['private_message_recipients']:
                 if recipient['recipient_id'] == recipient_id:

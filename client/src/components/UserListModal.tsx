@@ -17,7 +17,7 @@ interface User {
 interface UserListModalProps {
   isOpen: boolean
   onClose: () => void
-  onSelectUser: (userId: string, userName: string, userAvatar: string) => void
+  onSelectUser: (userId: string) => Promise<void>
 }
 
 export default function UserListModal({ isOpen, onClose, onSelectUser }: UserListModalProps) {
@@ -26,6 +26,7 @@ export default function UserListModal({ isOpen, onClose, onSelectUser }: UserLis
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [creatingChat, setCreatingChat] = useState<string | null>(null)
 
   const getDisplayName = (user: User): string => {
     if (user.first_name && user.last_name) {
@@ -56,6 +57,38 @@ export default function UserListModal({ isOpen, onClose, onSelectUser }: UserLis
       setError("Failed to load users. Please try again.")
     } finally {
       setLoading(false)
+    }
+  };
+
+  const handleUserSelect = async (user: User) => {
+    if (creatingChat) return; // Prevent multiple clicks
+    
+    setCreatingChat(user.id);
+    try {
+      console.log(`🚀 Starting chat creation/selection for user: ${getDisplayName(user)} (${user.id})`);
+      await onSelectUser(user.id);
+      console.log(`✅ Successfully created/opened chat with: ${getDisplayName(user)}`);
+    } catch (error: any) {
+      console.error("❌ Error selecting user:", error);
+      
+      // Show more specific error messages
+      let errorMessage = "Failed to create or open chat. Please try again.";
+      
+      if (error.message) {
+        if (error.message.includes("authentication") || error.message.includes("token")) {
+          errorMessage = "Authentication expired. Please refresh the page and try again.";
+        } else if (error.message.includes("verification failed")) {
+          errorMessage = "Chat creation succeeded but verification failed. Please refresh the page.";
+        } else if (error.message.includes("No chat ID")) {
+          errorMessage = "Server error: No chat ID received. Please try again.";
+        } else {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setCreatingChat(null);
     }
   };
 
@@ -129,12 +162,12 @@ export default function UserListModal({ isOpen, onClose, onSelectUser }: UserLis
             filteredUsers.map((user) => (
               <div
                 key={user.id}
-                className="user-list-item"
-                onClick={() => onSelectUser(
-                  user.id,
-                  getDisplayName(user),
-                  user.avatar || "/original_user_image.jpg?height=40&width=40"
-                )}
+                className={`user-list-item ${creatingChat === user.id ? 'creating-chat' : ''}`}
+                onClick={() => handleUserSelect(user)}
+                style={{ 
+                  cursor: creatingChat ? 'not-allowed' : 'pointer',
+                  opacity: creatingChat && creatingChat !== user.id ? 0.5 : 1
+                }}
               >
                 <div className="user-list-avatar-container">
                   <img
@@ -148,6 +181,11 @@ export default function UserListModal({ isOpen, onClose, onSelectUser }: UserLis
                   <h3 className="user-list-name">{getDisplayName(user)}</h3>
                   <p className="user-list-username">@{user.username}</p>
                 </div>
+                {creatingChat === user.id && (
+                  <div className="creating-chat-indicator">
+                    <Loader2 size={16} className="animate-spin" />
+                  </div>
+                )}
               </div>
             ))
           ) : (

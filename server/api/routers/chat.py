@@ -88,25 +88,35 @@ async def get_all_private_chats(
     summary="Return existing private chat or create a new one",
 )
 async def create_private_chat(
-    recipient_id: ObjectIdStr = Path(...),
+    recipient_id: str,
     mgr: PrivateChatManager = Depends(get_private_chat_manager),
     current_user: User = Depends(get_current_active_user),
 ):
-    # 1) Try to find an existing chat
-    existing = await mgr.find_private_chat(current_user.id, recipient_id)
-    if existing:
-        return ChatCreationResponse(
-            message="found existing chat",
-            chat=existing
-        )
+    try:
+        # 1) Try to find an existing chat
+        existing = await mgr.find_private_chat(current_user.id, recipient_id)
+        if existing:
+            return ChatCreationResponse(
+                message="found existing chat",
+                chat=existing
+            )
 
-    # 2) Not found → create a new one
-    new_chat = await mgr.create_chat(current_user.id, recipient_id)
-    return ChatCreationResponse(
-        message="chat not found, creating new chat",
-        chat=new_chat
-    )   
-    
+        # 2) Not found → create a new one
+        new_chat_model = await mgr.create_chat(current_user.id, recipient_id)
+        
+        new_chat_dict = new_chat_model.model_dump()
+        new_chat_schema = schemas.PrivateChat(**new_chat_dict)
+        
+        return ChatCreationResponse(
+            message="chat not found, creating new chat",
+            chat=new_chat_schema
+        )
+    except Exception as e:
+        print(f"Error in create_private_chat: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create or find chat: {str(e)}"
+        )
 
 @router.get('/private/messages/{chat_id}',
             response_model=list[schemas.Message])
