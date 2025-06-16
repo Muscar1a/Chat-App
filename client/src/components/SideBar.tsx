@@ -10,6 +10,7 @@ import { Chat } from "../types/chat";
 import { getDisplayName } from "../utils/userUtils";
 import { useAuth } from "../context/AuthContext";
 import { useE2E } from "../context/E2EContext";
+import { useChat } from "../context/ChatContext";
 import { decryptAESKeyWithPrivateKey, decryptMessageWithAES, decryptPrivateKey } from "../utils/Decryption";
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const { user } = useAuth();
   const { isE2EReady, EE2EInput } = useE2E();
+  const { lastMessages } = useChat();
 
   // Helper function to decrypt last message
   const decryptLastMessage = (lastMessage: any) => {
@@ -75,6 +77,19 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
     }
   }, [isE2EReady]);
 
+  // Reload chats when lastMessages changes to update UI
+  useEffect(() => {
+    if (isE2EReady && Object.keys(lastMessages).length > 0) {
+      console.log("Last messages updated, refreshing chat list");
+      // Use a small delay to avoid excessive re-renders
+      const timeoutId = setTimeout(() => {
+        loadExistingChats();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [lastMessages, isE2EReady]);
+
   const loadExistingChats = async () => {
     // Don't load chats if E2E is not ready
     if (!isE2EReady) {
@@ -98,13 +113,24 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
               ? chat.messages[chat.messages.length - 1]
               : null;
 
+            // Check if we have a more recent message from context
+            const contextLastMessage = lastMessages[chat.chat_id];
+            const useContextMessage = contextLastMessage && lastMessage && 
+              new Date(contextLastMessage.created_at) > new Date(lastMessage.created_at);
+
+            const finalLastMessage = useContextMessage ? contextLastMessage.message : 
+              (lastMessage ? decryptLastMessage(lastMessage) : "No messages yet");
+
+            const finalTimestamp = useContextMessage ? contextLastMessage.timestamp :
+              (chat.messages?.length > 0
+                ? new Date(chat.messages[chat.messages.length - 1].created_at).toLocaleTimeString()
+                : "Just now");
+
             return {
               id: chat.chat_id,
               name: getDisplayName(chatInfo.recipient_profile),
-              lastMessage: lastMessage ? decryptLastMessage(lastMessage) : "No messages yet",
-              timestamp: chat.messages?.length > 0
-                ? new Date(chat.messages[chat.messages.length - 1].created_at).toLocaleTimeString()
-                : "Just now",
+              lastMessage: finalLastMessage,
+              timestamp: finalTimestamp,
               unreadCount: 0,
               avatar: chatInfo.recipient_profile?.avatar || "/original_user_image.jpg?height=40&width=40",
               isOnline: chatInfo.recipient_profile?.is_online || false,

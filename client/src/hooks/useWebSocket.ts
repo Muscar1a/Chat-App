@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useChat } from "../context/ChatContext";
 
 interface Message {
   id: string;
@@ -40,6 +41,7 @@ export const useWebSocket = ({
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const { updateLastMessage } = useChat();
 
   const loadOldMessages = async (currentChatId: string) => {
     if (!currentChatId || !token || !user || !EE2EInput) return;
@@ -149,8 +151,17 @@ export const useWebSocket = ({
           // Decrypt the incoming message
           if (!user?.private_key_pem || !EE2EInput) {
             console.warn("Missing encryption data for incoming message");
-            onMessageReceived({
+            const fallbackMessage = {
               ...data,
+              created_at: new Date(data.created_at).toISOString(),
+            };
+            
+            onMessageReceived(fallbackMessage);
+            
+            // Update last message in context
+            updateLastMessage(chatId, {
+              message: data.message,
+              timestamp: new Date(data.created_at).toLocaleTimeString(),
               created_at: new Date(data.created_at).toISOString(),
             });
             return;
@@ -171,17 +182,35 @@ export const useWebSocket = ({
             const aesKey = decryptAESKeyWithPrivateKey(encryptedAESKey, myPrivateKeyPem);
             const plaintext = decryptMessageWithAES(data.message, aesKey, data.iv);
             
-            // Call callback with decrypted message
-            onMessageReceived({
+            const decryptedMessage = {
               ...data,
               message: plaintext,
+              created_at: new Date(data.created_at).toISOString(),
+            };
+            
+            // Call callback with decrypted message
+            onMessageReceived(decryptedMessage);
+            
+            // Update last message in context
+            updateLastMessage(chatId, {
+              message: plaintext,
+              timestamp: new Date(data.created_at).toLocaleTimeString(),
               created_at: new Date(data.created_at).toISOString(),
             });
           } catch (decryptError) {
             console.error("Error decrypting incoming message:", decryptError);
-            // Pass original message if decryption fails
-            onMessageReceived({
+            const fallbackMessage = {
               ...data,
+              created_at: new Date(data.created_at).toISOString(),
+            };
+            
+            // Pass original message if decryption fails
+            onMessageReceived(fallbackMessage);
+            
+            // Update last message in context with encrypted message
+            updateLastMessage(chatId, {
+              message: data.message,
+              timestamp: new Date(data.created_at).toLocaleTimeString(),
               created_at: new Date(data.created_at).toISOString(),
             });
           }
