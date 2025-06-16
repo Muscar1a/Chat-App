@@ -21,6 +21,8 @@ class UserBase(BaseModel):
     # firstName: str
     # lastName: str
     email: str
+    public_key_pem: str
+    private_key_pem: str
 
     token_version: int = Field(0)
 

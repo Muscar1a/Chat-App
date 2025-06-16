@@ -1,7 +1,6 @@
 "use client"
 import { Chat } from "../types/chat";
 
-
 interface ChatItemProps {
   chat: Chat
   isSelected: boolean
@@ -9,6 +8,7 @@ interface ChatItemProps {
 }
 
 export default function ChatItem({ chat, isSelected, onClick }: ChatItemProps) {
+  // Since the message is already decrypted in SideBar, we can display it directly
   return (
     <div className={`chat-item ${isSelected ? "selected" : ""}`} onClick={onClick}>
       <div className="chat-item-avatar-container">

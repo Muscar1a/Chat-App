@@ -3,6 +3,7 @@
 
 import type React from "react";
 
+import CryptoJS from "crypto-js";
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -71,23 +72,60 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (validateForm()) {
-      setIsLoading(true)
 
+    if (validateForm()) {
+      setIsLoading(true);
+      
       try {
-        await axios.post("http://localhost:8000/users/register", {
-          username: userName,
-          email,
-          password,
-        })
+      // Key generation functions
+      const convertBinaryToPEM = (binaryData: ArrayBuffer, label: string) => {
+        const base64String = window.btoa(String.fromCharCode(...new Uint8Array(binaryData)));
+        const formatted = base64String.match(/.{1,64}/g)?.join('\n') || '';
+        return `-----BEGIN ${label}-----\n${formatted}\n-----END ${label}-----`;
+      }
+      
+      const encryptPrivateKey = (privateKeyPem: string, password: string) => {
+        return CryptoJS.AES.encrypt(privateKeyPem, password).toString(); // base64
+      }
+
+      // Generate RSA key pair
+      const keyPair = await window.crypto.subtle.generateKey(
+        {
+          name: "RSA-OAEP",
+          modulusLength: 2048,
+          publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+          hash: "SHA-256",
+        },
+        true,
+        ["encrypt", "decrypt"]
+      );
+
+      const publicKeyBuffer = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+      const privateKeyBuffer = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+
+      const publicKeyPem = convertBinaryToPEM(publicKeyBuffer, "PUBLIC KEY");
+      const privateKeyPem = convertBinaryToPEM(privateKeyBuffer, "PRIVATE KEY");
+
+      const encryptedPrivateKeyPem = encryptPrivateKey(privateKeyPem, password);
+
+      // Send registration request
+      const response = await axios.post("http://localhost:8000/users/register", {
+        username: userName,
+        email,
+        password,
+        public_key_pem: publicKeyPem,
+        private_key_pem: encryptedPrivateKeyPem
+      });
+      console.log('Registration successful:', response.data);
+      setIsLoading(false);
+      
+      window.location.href = "/login"
+    } catch (error: any) {
         setIsLoading(false)
-        window.location.href = "/login"
-      } catch (error: any) {
-        setIsLoading(false)
-        
+
         if (error.response && error.response.data) {
           const errorData = error.response.data;
-          
+
           // Handle structured validation errors from server
           if (errorData.errors && Array.isArray(errorData.errors)) {
             const newErrors: any = {};
@@ -193,7 +231,7 @@ export default function Register() {
               </button>
             </div>
             {errors.password && <p className="error-message">{errors.password}</p>}
-            
+
             {password && (
               <div className="password-requirements">
                 <h4>Yêu cầu mật khẩu:</h4>

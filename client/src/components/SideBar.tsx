@@ -8,6 +8,9 @@ import UserListModal from "./UserListModal";
 import axios from "axios";
 import { Chat } from "../types/chat";
 import { getDisplayName } from "../utils/userUtils";
+import { useAuth } from "../context/AuthContext";
+import { useE2E } from "../context/E2EContext";
+import { decryptAESKeyWithPrivateKey, decryptMessageWithAES, decryptPrivateKey } from "../utils/Decryption";
 
 interface SidebarProps {
   selectedChat: string | null
@@ -20,16 +23,68 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [isLoadingChats, setIsLoadingChats] = useState(true);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const { user } = useAuth();
+  const { isE2EReady, EE2EInput } = useE2E();
+
+  // Helper function to decrypt last message
+  const decryptLastMessage = (lastMessage: any) => {
+    if (!lastMessage || !isE2EReady || !EE2EInput || !user?.private_key_pem) {
+      return lastMessage?.message || "No messages yet";
+    }
+
+    try {
+      console.log("Attempting to decrypt last message in sidebar:", lastMessage);
+      
+      // Decrypt private key
+      const myPrivateKeyPem = decryptPrivateKey(user.private_key_pem, EE2EInput);
+      
+      // Get the appropriate encrypted key based on who sent the message
+      const encryptedKey = lastMessage.created_by === user.id
+        ? lastMessage.encrypted_key_sender
+        : lastMessage.encrypted_key_receiver;
+
+      if (!encryptedKey || !lastMessage.iv) {
+        console.warn("Missing encryption data for last message");
+        return lastMessage.message;
+      }
+
+      // Decrypt AES key using private key
+      const aesKey = decryptAESKeyWithPrivateKey(encryptedKey, myPrivateKeyPem);
+      
+      // Decrypt message using AES key
+      const plaintext = decryptMessageWithAES(lastMessage.message, aesKey, lastMessage.iv);
+      
+      console.log("Successfully decrypted last message:", plaintext);
+      return plaintext;
+      
+    } catch (error) {
+      console.error("Failed to decrypt last message:", error);
+      return lastMessage.message;
+    }
+  };
 
   const filteredChats = chats.filter((chat) => chat.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
+  // Only load chats when E2E is ready
   useEffect(() => {
-    loadExistingChats();
-  }, []);
+    if (isE2EReady) {
+      console.log("E2E is ready, loading chats with decryption capability");
+      loadExistingChats();
+    } else {
+      console.log("E2E not ready yet, waiting before loading chats");
+    }
+  }, [isE2EReady]);
 
   const loadExistingChats = async () => {
+    // Don't load chats if E2E is not ready
+    if (!isE2EReady) {
+      console.log("E2E not ready, skipping chat loading");
+      return;
+    }
+
     try {
       setIsLoadingChats(true);
+      console.log("Loading chats with E2E decryption...");
       const response = await axios.get("http://localhost:8000/chat/private/all/");
       const chatData = response.data;
 
@@ -39,12 +94,14 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
             const chatInfoResponse = await axios.get(`http://localhost:8000/chat/private/info/${chat.chat_id}`)
             const chatInfo = chatInfoResponse.data
 
+            const lastMessage = chat.messages?.length > 0 
+              ? chat.messages[chat.messages.length - 1]
+              : null;
+
             return {
               id: chat.chat_id,
               name: getDisplayName(chatInfo.recipient_profile),
-              lastMessage: chat.messages?.length > 0
-                ? chat.messages[chat.messages.length - 1].message
-                : "No messages yet",
+              lastMessage: lastMessage ? decryptLastMessage(lastMessage) : "No messages yet",
               timestamp: chat.messages?.length > 0
                 ? new Date(chat.messages[chat.messages.length - 1].created_at).toLocaleTimeString()
                 : "Just now",
@@ -205,7 +262,12 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
       </div>
 
       <div className="chat-list">
-        {isLoadingChats ? (
+        {!isE2EReady ? (
+          <div className="loading-chats">
+            <div className="loading-spinner"></div>
+            <p>Waiting for E2E encryption to be ready...</p>
+          </div>
+        ) : isLoadingChats ? (
           <div className="loading-chats">
             <div className="loading-spinner"></div>
             <p>Loading chats...</p>
@@ -228,12 +290,14 @@ export default function Sidebar({ selectedChat, onSelectChat }: SidebarProps) {
       </div>
 
       <button 
-        className={`new-chat-button ${isCreatingChat ? 'creating' : ''}`} 
+        className={`new-chat-button ${isCreatingChat || !isE2EReady ? 'creating' : ''}`} 
         onClick={() => setIsUserListOpen(true)}
-        disabled={isCreatingChat}
+        disabled={isCreatingChat || !isE2EReady}
+        title={!isE2EReady ? "Please enter E2E password first" : "Create new chat"}
       >
         <Plus size={24} />
         {isCreatingChat && <span className="creating-text">Creating...</span>}
+        {!isE2EReady && !isCreatingChat && <span className="creating-text">E2E Required</span>}
       </button>
 
       <UserListModal

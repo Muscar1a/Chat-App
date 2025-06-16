@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { clearE2ESession } from './E2EContext';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -54,6 +55,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    const currentUserId = user?.id; // Store user ID before clearing
+    
     try {
       if (isAuthenticated) {
         await axios.post('http://localhost:8000/auth/logout');
@@ -61,6 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error("Error logging out:", error);
     } finally {
+      // Clear E2E session for this user
+      if (currentUserId) {
+        clearE2ESession(currentUserId);
+      }
+      
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
       setUser(null);

@@ -12,21 +12,27 @@ import { ChatProvider } from "./context/ChatContext"
 import "./App.css"
 import "./styles/toast.css"
 import { AuthProvider, useAuth } from "./context/AuthContext"
+import { E2EProvider } from "./context/E2EContext"
 import HomePage from "./pages/HomePage"
 import { ThemeProvider } from "./context/ThemeContext"
+import E2EModal from "./components/E2EModal"
+import "./styles/e2e-modal.css"
 
 function ChatApp() {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
 
   return (
-    <ChatProvider>
-      <div className="app">
-        <div className="chat-container">
-          <Sidebar selectedChat={selectedChat} onSelectChat={setSelectedChat} />
-          <ChatWindow chatId={selectedChat} />
+    <E2EProvider>
+      <ChatProvider>
+        <div className="app">
+          <E2EModal />
+          <div className="chat-container">
+            <Sidebar selectedChat={selectedChat} onSelectChat={setSelectedChat} />
+            <ChatWindow chatId={selectedChat} />
+          </div>
         </div>
-      </div>
-    </ChatProvider>
+      </ChatProvider>
+    </E2EProvider>
   )
 }
 
