@@ -34,48 +34,21 @@ export const E2EProvider: React.FC<E2EProviderProps> = ({ children }) => {
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  // Check if E2E password is already saved in session
-  useEffect(() => {
-    if (user && !isE2EReady) {
+
+  const resetE2E = () => {
+    // Clear sessionStorage for current user
+    if (user?.id) {
       const sessionKey = `e2e_password_${user.id}`;
-      const savedPassword = sessionStorage.getItem(sessionKey);
-      
-      if (savedPassword) {
-        // Try to verify saved password
-        try {
-          decryptPrivateKey(user.private_key_pem, savedPassword);
-          // If successful, set password and mark as ready
-          setEE2EInput(savedPassword);
-          setIsE2EReady(true);
-          console.log("E2E password restored from session");
-          return;
-        } catch (error) {
-          // Saved password is invalid, remove it and show modal
-          console.warn("Saved E2E password is invalid, clearing it");
-          sessionStorage.removeItem(sessionKey);
-        }
-      }
-      
-      // If no valid saved password, show modal
-      setShowE2EModal(true);
-      setPasswordError("");
+      sessionStorage.removeItem(sessionKey);
     }
-  }, [user, isE2EReady]);
+    
+    setIsE2EReady(false);
+    setEE2EInput("");
+    setShowE2EModal(false);
+    setPasswordError("");
+    setIsLoading(false);
+  };
 
-  // Show E2E modal when user is authenticated but E2E is not ready
-  useEffect(() => {
-    if (user && !isE2EReady && !showE2EModal) {
-      setShowE2EModal(true);
-      setPasswordError("");
-    }
-  }, [user, isE2EReady, showE2EModal]);
-
-  // Reset E2E when user changes
-  useEffect(() => {
-    if (!user) {
-      resetE2E();
-    }
-  }, [user?.id]);
   const verifyE2EPassword = async () => {
     if (!EE2EInput.trim()) {
       setPasswordError("Password cannot be empty");
@@ -99,7 +72,7 @@ export const E2EProvider: React.FC<E2EProviderProps> = ({ children }) => {
       const sessionKey = `e2e_password_${user.id}`;
       sessionStorage.setItem(sessionKey, EE2EInput);
       
-      // If successful, mark as ready
+      // If successful, mark as ready and hide modal
       setIsE2EReady(true);
       setShowE2EModal(false);
       setPasswordError("");
@@ -111,19 +84,62 @@ export const E2EProvider: React.FC<E2EProviderProps> = ({ children }) => {
       setIsLoading(false);
     }
   };
-  const resetE2E = () => {
-    // Clear sessionStorage for current user
-    if (user?.id) {
-      const sessionKey = `e2e_password_${user.id}`;
-      sessionStorage.removeItem(sessionKey);
+
+  // Check if E2E password is already saved in session and manage modal display
+  useEffect(() => {
+    console.log("E2E useEffect triggered", { user: !!user, isE2EReady, showE2EModal });
+    
+    if (!user) {
+      console.log("No user, skipping E2E check");
+      return;
+    }
+
+    if (isE2EReady) {
+      // If E2E is already ready, don't show modal
+      console.log("E2E already ready, hiding modal");
+      setShowE2EModal(false);
+      return;
+    }
+
+    const sessionKey = `e2e_password_${user.id}`;
+    const savedPassword = sessionStorage.getItem(sessionKey);
+    
+    console.log("Checking saved password for user", user.id, "found:", !!savedPassword);
+    
+    if (savedPassword) {
+      // Try to verify saved password
+      try {
+        decryptPrivateKey(user.private_key_pem, savedPassword);
+        // If successful, set password and mark as ready
+        console.log("Saved password is valid, restoring E2E state");
+        setEE2EInput(savedPassword);
+        setIsE2EReady(true);
+        setShowE2EModal(false);
+        console.log("E2E password restored from session");
+        return;
+      } catch (error) {
+        // Saved password is invalid, remove it and show modal
+        console.warn("Saved E2E password is invalid, clearing it");
+        sessionStorage.removeItem(sessionKey);
+      }
     }
     
-    setIsE2EReady(false);
-    setEE2EInput("");
-    setShowE2EModal(false);
-    setPasswordError("");
-    setIsLoading(false);
-  };
+    // If no valid saved password and E2E is not ready, show modal
+    if (!isE2EReady) {
+      console.log("No valid saved password, showing E2E modal");
+      setShowE2EModal(true);
+      setPasswordError("");
+    }
+  }, [user?.id, isE2EReady]); // Use user.id instead of user object to avoid unnecessary re-renders
+
+  // Reset E2E when user changes (different user ID) or user logs out
+  useEffect(() => {
+    if (!user) {
+      console.log("User logged out, resetting E2E");
+      resetE2E();
+    }
+  }, [user?.id]); // Only reset when user ID changes, not when user object changes
+
   const setEE2EInputWithClearError = (password: string) => {
     setEE2EInput(password);
     if (passwordError) {

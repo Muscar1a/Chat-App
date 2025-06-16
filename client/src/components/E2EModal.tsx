@@ -84,10 +84,6 @@ const E2EModal: React.FC = () => {
             <span className="e2e-info-icon">🔑</span>
             <span>Only you and your recipient can read them</span>
           </div>
-          <div className="e2e-info-item">
-            <span className="e2e-info-icon">🛡️</span>
-            <span>Your password never leaves your device</span>
-          </div>
         </div>
       </div>
     </div>
