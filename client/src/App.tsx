@@ -54,6 +54,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/forgot-password/:urlToken" element={<ForgotPassword />} />
+            <Route path="/reset-password.html" element={<ForgotPassword />} />
             <Route
               path="/profile"
               element={

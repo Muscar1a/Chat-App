@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import "../styles/auth.css"
 import axios from "axios"
 import { useAuth } from "../context/AuthContext";
@@ -18,9 +18,20 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ userName?: string; password?: string; }>({})
+  const [successMessage, setSuccessMessage] = useState<string>("")
+  
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      // Clear the state to avoid showing the message again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const validateForm = () => {
     const newErrors: { userName?: string; password?: string } = {}
@@ -81,6 +92,12 @@ export default function Login() {
           <h1 className="auth-title">Đăng nhập</h1>
           <p className="auth-subtitle">Chào mừng trở lại! Vui lòng đăng nhập để tiếp tục.</p>
         </div>
+
+        {successMessage && (
+          <div className="success-message" style={{ marginBottom: '24px', padding: '16px' }}>
+            <p style={{ color: 'var(--success, #059669)', margin: 0, fontSize: '14px' }}>{successMessage}</p>
+          </div>
+        )}
 
 
         <form onSubmit={handleSubmit} className="auth-form">

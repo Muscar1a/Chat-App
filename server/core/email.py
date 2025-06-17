@@ -4,7 +4,7 @@ from email.message import EmailMessage
 from config import settings
 
 async def send_reset_email(to_email: str, token: str):
-    reset_link = f"{settings.FRONTEND_URL}/reset-password.html?token={token}"
+    reset_link = f"{settings.FRONTEND_URL}/forgot-password?token={token}"
     msg = EmailMessage()
     msg["Subject"] = "Your ChatApp Password Reset"
     msg["From"] = settings.EMAIL_FROM
